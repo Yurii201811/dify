@@ -2,18 +2,22 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
-from werkzeug.exceptions import Forbidden, Unauthorized
+from flask import Flask
+from werkzeug.exceptions import Forbidden, NotFound, Unauthorized
 
 from controllers.openapi.auth.data import AuthData
 from controllers.openapi.auth.verify import (
     check_acl,
     check_app_access,
+    check_app_api_enabled,
     check_membership,
     check_private_app_permission,
     check_scope,
+    check_workspace_mismatch,
+    check_workspace_role,
 )
 from libs.oauth_bearer import Scope, TokenType
-from models.account import Tenant
+from models.account import Tenant, TenantAccountRole
 from models.model import App
 from services.enterprise.enterprise_service import WebAppAccessMode
 
@@ -140,3 +144,92 @@ def test_check_private_app_permission_passes_when_allowed():
     target = "controllers.openapi.auth.verify.EnterpriseService.WebAppAuth.is_user_allowed_to_access_webapp"
     with patch(target, return_value=True):
         check_private_app_permission(data)
+
+
+# --- check_workspace_mismatch ---
+
+
+@pytest.fixture
+def flask_app():
+    return Flask(__name__)
+
+
+def test_check_workspace_mismatch_passes_when_tenant_none(flask_app):
+    with flask_app.test_request_context("/test"):
+        check_workspace_mismatch(_data(tenant=None))
+
+
+def test_check_workspace_mismatch_passes_when_ids_match(flask_app):
+    tenant = MagicMock(spec=Tenant)
+    tid = uuid.uuid4()
+    tenant.id = tid
+    with flask_app.test_request_context(f"/test?workspace_id={tid}"):
+        check_workspace_mismatch(_data(tenant=tenant, path_params={}))
+
+
+def test_check_workspace_mismatch_raises_422_on_mismatch(flask_app):
+    from werkzeug.exceptions import UnprocessableEntity
+
+    tenant = MagicMock(spec=Tenant)
+    tenant.id = uuid.uuid4()
+    other_id = uuid.uuid4()
+    with flask_app.test_request_context(f"/test?workspace_id={other_id}"):
+        with pytest.raises(UnprocessableEntity):
+            check_workspace_mismatch(_data(tenant=tenant, path_params={}))
+
+
+def test_check_workspace_mismatch_passes_when_no_request_workspace_id(flask_app):
+    tenant = MagicMock(spec=Tenant)
+    tenant.id = uuid.uuid4()
+    with flask_app.test_request_context("/test"):
+        check_workspace_mismatch(_data(tenant=tenant, path_params={}))
+
+
+# --- check_workspace_role ---
+
+
+def test_check_workspace_role_passes_when_allowed_roles_none():
+    check_workspace_role(_data(allowed_roles=None))
+
+
+def test_check_workspace_role_raises_not_found_when_not_member():
+    data = _data(tenant_role=None, allowed_roles=frozenset({TenantAccountRole.ADMIN}))
+    with pytest.raises(NotFound):
+        check_workspace_role(data)
+
+
+def test_check_workspace_role_raises_forbidden_when_wrong_role():
+    data = _data(
+        tenant_role=TenantAccountRole.EDITOR,
+        allowed_roles=frozenset({TenantAccountRole.OWNER}),
+    )
+    with pytest.raises(Forbidden, match="insufficient workspace role"):
+        check_workspace_role(data)
+
+
+def test_check_workspace_role_passes_when_role_allowed():
+    data = _data(
+        tenant_role=TenantAccountRole.ADMIN,
+        allowed_roles=frozenset({TenantAccountRole.OWNER, TenantAccountRole.ADMIN}),
+    )
+    check_workspace_role(data)
+
+
+# --- check_app_api_enabled ---
+
+
+def test_check_app_api_enabled_passes_when_enabled():
+    app = MagicMock(spec=App)
+    app.enable_api = True
+    check_app_api_enabled(_data(app=app))
+
+
+def test_check_app_api_enabled_raises_forbidden_when_disabled():
+    app = MagicMock(spec=App)
+    app.enable_api = False
+    with pytest.raises(Forbidden, match="service_api_disabled"):
+        check_app_api_enabled(_data(app=app))
+
+
+def test_check_app_api_enabled_passes_when_app_none():
+    check_app_api_enabled(_data(app=None))

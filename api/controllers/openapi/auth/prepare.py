@@ -3,9 +3,9 @@ from __future__ import annotations
 from werkzeug.exceptions import Forbidden, InternalServerError, NotFound, Unauthorized
 
 from controllers.openapi.auth.data import AuthData
-from core.app.entities.app_invoke_entities import InvokeFrom
 from extensions.ext_database import db
 from models.account import TenantStatus
+from models.enums import EndUserType
 from services.account_service import AccountService, TenantService
 from services.app_service import AppService
 from services.end_user_service import EndUserService
@@ -45,7 +45,7 @@ def resolve_external_user(data: AuthData) -> None:
     if data.tenant is None or data.app is None or data.external_identity is None:
         raise Unauthorized("missing context for external user resolution")
     end_user = EndUserService.get_or_create_end_user_by_type(
-        InvokeFrom.OPENAPI,
+        EndUserType.OPENAPI,
         tenant_id=str(data.tenant.id),
         app_id=str(data.app.id),
         user_id=data.external_identity.email,

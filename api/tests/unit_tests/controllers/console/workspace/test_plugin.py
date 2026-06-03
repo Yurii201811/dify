@@ -9,6 +9,7 @@ from werkzeug.exceptions import Forbidden
 from controllers.console.workspace.plugin import (
     PluginAssetApi,
     PluginAutoUpgradeExcludePluginApi,
+    PluginCategoryListApi,
     PluginChangeAutoUpgradeApi,
     PluginChangePermissionApi,
     PluginDebuggingKeyApi,
@@ -140,6 +141,83 @@ class TestPluginListApi:
             result = method(api)
 
         assert result["total"] == 1
+
+
+class TestPluginCategoryListApi:
+    def test_plugin_category_list(self, app: Flask):
+        api = PluginCategoryListApi()
+        method = unwrap(api.get)
+        mock_list = MagicMock(list=[{"id": 1}], has_more=True)
+
+        with (
+            app.test_request_context("/?page=2&page_size=10"),
+            patch("controllers.console.workspace.plugin.current_account_with_tenant", return_value=(None, "t1")),
+            patch(
+                "controllers.console.workspace.plugin.PluginService.list_by_category", return_value=mock_list
+            ) as list_mock,
+            patch(
+                "controllers.console.workspace.plugin._list_hardcoded_builtin_tool_providers",
+                return_value=[{"id": "builtin"}],
+            ) as builtin_mock,
+        ):
+            result = method(api, "tool")
+
+        list_mock.assert_called_once()
+        assert list_mock.call_args.args[0] == "t1"
+        assert list_mock.call_args.args[1] == "tool"
+        assert list_mock.call_args.args[2] == 2
+        assert list_mock.call_args.args[3] == 10
+        assert result["plugins"] == [{"id": 1}]
+        assert result["builtin_tools"] == [{"id": "builtin"}]
+        assert result["has_more"] is True
+        assert "total" not in result
+        builtin_mock.assert_called_once_with("t1")
+
+    def test_non_tool_category_does_not_include_builtin_tools(self, app: Flask):
+        api = PluginCategoryListApi()
+        method = unwrap(api.get)
+        mock_list = MagicMock(list=[{"id": 1}], has_more=False)
+
+        with (
+            app.test_request_context("/?page=1&page_size=10"),
+            patch("controllers.console.workspace.plugin.current_account_with_tenant", return_value=(None, "t1")),
+            patch("controllers.console.workspace.plugin.PluginService.list_by_category", return_value=mock_list),
+            patch("controllers.console.workspace.plugin._list_hardcoded_builtin_tool_providers") as builtin_mock,
+        ):
+            result = method(api, "datasource")
+
+        assert result["plugins"] == [{"id": 1}]
+        assert result["builtin_tools"] == []
+        assert result["has_more"] is False
+        builtin_mock.assert_not_called()
+
+    def test_invalid_category(self, app: Flask):
+        api = PluginCategoryListApi()
+        method = unwrap(api.get)
+
+        with (
+            app.test_request_context("/?page=1&page_size=10"),
+            patch("controllers.console.workspace.plugin.current_account_with_tenant", return_value=(None, "t1")),
+        ):
+            result = method(api, "unknown")
+
+        assert result == ({"code": "invalid_param", "message": "invalid plugin category"}, 400)
+
+    def test_daemon_error(self, app: Flask):
+        api = PluginCategoryListApi()
+        method = unwrap(api.get)
+
+        with (
+            app.test_request_context("/?page=1&page_size=10"),
+            patch("controllers.console.workspace.plugin.current_account_with_tenant", return_value=(None, "t1")),
+            patch(
+                "controllers.console.workspace.plugin.PluginService.list_by_category",
+                side_effect=PluginDaemonClientSideError("error"),
+            ),
+        ):
+            result = method(api, "tool")
+
+        assert result == ({"code": "plugin_error", "message": "error"}, 400)
 
 
 class TestPluginIconApi:

@@ -240,7 +240,8 @@ def test_invoke_skips_forwarding_when_enterprise_disabled():
         # to keep the test unit-scoped.
         with patch("core.tools.mcp_tool.tool.MCPClientWithAuthRetry") as client_cls:
             client_cls.return_value.__enter__.return_value.invoke_tool.return_value = CallToolResult(
-                content=[], _meta=None,
+                content=[],
+                _meta=None,
             )
             with patch.object(tool, "_inject_forwarded_identity") as inject:
                 with patch("services.tools.mcp_tools_manage_service.MCPToolManageService"):

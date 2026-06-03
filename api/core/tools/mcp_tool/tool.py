@@ -6,6 +6,7 @@ import logging
 from collections.abc import Generator, Mapping
 from typing import Any, cast
 
+from configs import dify_config
 from core.entities.mcp_provider import IdentityMode
 from core.mcp.auth_client import MCPClientWithAuthRetry
 from core.mcp.error import MCPConnectionError
@@ -253,6 +254,18 @@ class MCPTool(Tool):
             if value is not None and not (isinstance(value, str) and value.strip() == "")
         }
 
+    @property
+    def _forwarding_requested(self) -> bool:
+        """True only when forwarding is enabled, supported, AND the deployment
+        actually has the enterprise side that can mint identity tokens.
+        Non-enterprise installs treat the DB flags as no-ops — a stale row
+        won't trigger a 5xx against a missing inner-API endpoint."""
+        return (
+            self.forward_user_identity
+            and self.identity_mode == IdentityMode.IDP_TOKEN
+            and dify_config.ENTERPRISE_ENABLED
+        )
+
     def invoke_remote_mcp_tool(
         self,
         tool_parameters: dict[str, Any],
@@ -260,7 +273,7 @@ class MCPTool(Tool):
         app_id: str | None = None,
     ) -> CallToolResult:
         # Fail closed: forwarding requires user_id (refuse before any DB I/O).
-        if self.forward_user_identity and self.identity_mode == IdentityMode.IDP_TOKEN and not user_id:
+        if self._forwarding_requested and not user_id:
             raise ToolInvokeError(
                 "Forward-user-identity is enabled for this MCP provider but no end-user context was supplied."
             )
@@ -291,7 +304,7 @@ class MCPTool(Tool):
 
         # Stamp the forwarded identity over any existing Authorization header.
         forward_identity_active = False
-        if self.forward_user_identity and self.identity_mode == IdentityMode.IDP_TOKEN and user_id:
+        if self._forwarding_requested and user_id:
             self._inject_forwarded_identity(headers, user_id=user_id, app_id=app_id, audience=server_url)
             forward_identity_active = True
 

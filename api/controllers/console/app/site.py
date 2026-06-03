@@ -14,15 +14,12 @@ from controllers.console.wraps import (
     edit_permission_required,
     is_admin_or_owner_required,
     setup_required,
-    with_current_user,
 )
 from extensions.ext_database import db
 from fields.base import ResponseModel
 from libs.datetime_utils import naive_utc_now
-from libs.login import login_required
+from libs.login import current_account_with_tenant, login_required
 from models import Site
-from models.account import Account
-from models.model import App
 
 
 class AppSiteUpdatePayload(BaseModel):
@@ -87,9 +84,9 @@ class AppSite(Resource):
     @edit_permission_required
     @account_initialization_required
     @get_app_model
-    @with_current_user
-    def post(self, current_user: Account, app_model: App):
+    def post(self, app_model):
         args = AppSiteUpdatePayload.model_validate(console_ns.payload or {})
+        current_user, _ = current_account_with_tenant()
         site = db.session.scalar(select(Site).where(Site.app_id == app_model.id).limit(1))
         if not site:
             raise NotFound
@@ -136,8 +133,8 @@ class AppSiteAccessTokenReset(Resource):
     @is_admin_or_owner_required
     @account_initialization_required
     @get_app_model
-    @with_current_user
-    def post(self, current_user: Account, app_model: App):
+    def post(self, app_model):
+        current_user, _ = current_account_with_tenant()
         site = db.session.scalar(select(Site).where(Site.app_id == app_model.id).limit(1))
 
         if not site:

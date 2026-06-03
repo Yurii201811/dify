@@ -6,13 +6,12 @@ from sqlalchemy.orm import sessionmaker
 from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
 from controllers.console.app.wraps import get_app_model
-from controllers.console.wraps import account_initialization_required, setup_required, with_current_user
+from controllers.console.wraps import account_initialization_required, setup_required
 from extensions.ext_database import db
 from libs.datetime_utils import parse_time_range
-from libs.login import login_required
-from models.account import Account
+from libs.login import current_account_with_tenant, login_required
 from models.enums import WorkflowRunTriggeredFrom
-from models.model import App, AppMode
+from models.model import AppMode
 from repositories.factory import DifyAPIRepositoryFactory
 
 
@@ -47,8 +46,9 @@ class WorkflowDailyRunsStatistic(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @with_current_user
-    def get(self, account: Account, app_model: App):
+    def get(self, app_model):
+        account, _ = current_account_with_tenant()
+
         args = WorkflowStatisticQuery.model_validate(request.args.to_dict(flat=True))
 
         assert account.timezone is not None
@@ -86,8 +86,9 @@ class WorkflowDailyTerminalsStatistic(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @with_current_user
-    def get(self, account: Account, app_model: App):
+    def get(self, app_model):
+        account, _ = current_account_with_tenant()
+
         args = WorkflowStatisticQuery.model_validate(request.args.to_dict(flat=True))
 
         assert account.timezone is not None
@@ -125,8 +126,9 @@ class WorkflowDailyTokenCostStatistic(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @with_current_user
-    def get(self, account: Account, app_model: App):
+    def get(self, app_model):
+        account, _ = current_account_with_tenant()
+
         args = WorkflowStatisticQuery.model_validate(request.args.to_dict(flat=True))
 
         assert account.timezone is not None
@@ -164,8 +166,9 @@ class WorkflowAverageAppInteractionStatistic(Resource):
     @login_required
     @account_initialization_required
     @get_app_model(mode=[AppMode.WORKFLOW])
-    @with_current_user
-    def get(self, account: Account, app_model: App):
+    def get(self, app_model):
+        account, _ = current_account_with_tenant()
+
         args = WorkflowStatisticQuery.model_validate(request.args.to_dict(flat=True))
 
         assert account.timezone is not None

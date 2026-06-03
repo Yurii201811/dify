@@ -1525,18 +1525,16 @@ class DatasetRetrieval:
                 filters.append(json_field.like(f"%{escaped_value}", escape="\\"))
 
             case "is" | "=":
-                match value:
-                    case str():
-                        filters.append(json_field == value)
-                    case int() | float():
-                        filters.append(DatasetDocument.doc_metadata[metadata_name].as_float() == value)
+                if isinstance(value, str):
+                    filters.append(json_field == value)
+                elif isinstance(value, (int, float)):
+                    filters.append(DatasetDocument.doc_metadata[metadata_name].as_float() == value)
 
             case "is not" | "≠":
-                match value:
-                    case str():
-                        filters.append(json_field != value)
-                    case int() | float():
-                        filters.append(DatasetDocument.doc_metadata[metadata_name].as_float() != value)
+                if isinstance(value, str):
+                    filters.append(json_field != value)
+                elif isinstance(value, (int, float)):
+                    filters.append(DatasetDocument.doc_metadata[metadata_name].as_float() != value)
 
             case "empty":
                 filters.append(DatasetDocument.doc_metadata[metadata_name].is_(None))
@@ -1556,13 +1554,12 @@ class DatasetRetrieval:
             case "≥" | ">=":
                 filters.append(DatasetDocument.doc_metadata[metadata_name].as_float() >= value)
             case "in" | "not in":
-                match value:
-                    case str():
-                        value_list = [v.strip() for v in value.split(",") if v.strip()]
-                    case list() | tuple():
-                        value_list = [str(v) for v in value if v is not None]
-                    case _:
-                        value_list = [str(value)] if value is not None else []
+                if isinstance(value, str):
+                    value_list = [v.strip() for v in value.split(",") if v.strip()]
+                elif isinstance(value, (list, tuple)):
+                    value_list = [str(v) for v in value if v is not None]
+                else:
+                    value_list = [str(value)] if value is not None else []
 
                 if not value_list:
                     # `field in []` is False, `field not in []` is True
@@ -1709,13 +1706,12 @@ class DatasetRetrieval:
         usage = None
         for result in invoke_result:
             text = result.delta.message.content
-            match text:
-                case str():
-                    full_text += text
-                case list():
-                    for i in text:
-                        if i.data:
-                            full_text += i.data
+            if isinstance(text, str):
+                full_text += text
+            elif isinstance(text, list):
+                for i in text:
+                    if i.data:
+                        full_text += i.data
 
             if not model:
                 model = result.model

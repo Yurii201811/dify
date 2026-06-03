@@ -1,9 +1,7 @@
-import type { ReactElement } from 'react'
 import type { PluginDetail } from '@/app/components/plugins/types'
-import { fireEvent, render as rtlRender, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PluginCategoryEnum, PluginSource } from '@/app/components/plugins/types'
-import { createAccountProfileQueryWrapper } from '@/test/account-profile-query'
 import DetailHeader from '../index'
 
 const mockSetTargetVersion = vi.fn()
@@ -11,11 +9,6 @@ const mockSetVersionPickerOpen = vi.fn()
 const mockHandleUpdate = vi.fn()
 const mockHandleUpdatedFromMarketplace = vi.fn()
 const mockHandleDelete = vi.fn()
-
-const render = (ui: ReactElement) => {
-  const Wrapper = createAccountProfileQueryWrapper({ timezone: 'UTC' })
-  return rtlRender(ui, { wrapper: Wrapper })
-}
 
 vi.mock('@/context/app-context', () => ({
   useAppContext: () => ({

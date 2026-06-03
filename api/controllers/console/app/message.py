@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 from typing import Literal
-from uuid import UUID
 
 from flask import request
 from flask_restx import Resource
@@ -25,7 +24,6 @@ from controllers.console.wraps import (
     account_initialization_required,
     edit_permission_required,
     setup_required,
-    with_current_user,
 )
 from core.app.entities.app_invoke_entities import InvokeFrom
 from core.entities.execution_extra_content import ExecutionExtraContentDomainModel
@@ -44,10 +42,9 @@ from fields.conversation_fields import (
 from graphon.model_runtime.errors.invoke import InvokeError
 from libs.helper import to_timestamp, uuid_value
 from libs.infinite_scroll_pagination import InfiniteScrollPagination
-from libs.login import login_required
-from models.account import Account
+from libs.login import current_account_with_tenant, login_required
 from models.enums import FeedbackFromSource, FeedbackRating
-from models.model import App, AppMode, Conversation, Message, MessageAnnotation, MessageFeedback
+from models.model import AppMode, Conversation, Message, MessageAnnotation, MessageFeedback
 from services.errors.conversation import ConversationNotExistsError
 from services.errors.message import MessageNotExistsError, SuggestedQuestionsAfterAnswerDisabledError
 from services.message_service import MessageService, attach_message_extra_contents
@@ -180,9 +177,9 @@ class ChatMessageListApi(Resource):
     @login_required
     @account_initialization_required
     @setup_required
-    @get_app_model(mode=[AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT, AppMode.AGENT])
+    @get_app_model(mode=[AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT])
     @edit_permission_required
-    def get(self, app_model: App):
+    def get(self, app_model):
         args = ChatMessagesQuery.model_validate(request.args.to_dict())
 
         conversation = db.session.scalar(
@@ -259,8 +256,9 @@ class MessageFeedbackApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @with_current_user
-    def post(self, current_user: Account, app_model: App):
+    def post(self, app_model):
+        current_user, _ = current_account_with_tenant()
+
         args = MessageFeedbackPayload.model_validate(console_ns.payload)
 
         message_id = str(args.message_id)
@@ -315,7 +313,7 @@ class MessageAnnotationCountApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    def get(self, app_model: App):
+    def get(self, app_model):
         count = db.session.scalar(
             select(func.count(MessageAnnotation.id)).where(MessageAnnotation.app_id == app_model.id)
         )
@@ -337,14 +335,14 @@ class MessageSuggestedQuestionApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @get_app_model(mode=[AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT, AppMode.AGENT])
-    @with_current_user
-    def get(self, current_user: Account, app_model: App, message_id: UUID):
-        message_id_str = str(message_id)
+    @get_app_model(mode=[AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT])
+    def get(self, app_model, message_id):
+        current_user, _ = current_account_with_tenant()
+        message_id = str(message_id)
 
         try:
             questions = MessageService.get_suggested_questions_after_answer(
-                app_model=app_model, message_id=message_id_str, user=current_user, invoke_from=InvokeFrom.DEBUGGER
+                app_model=app_model, message_id=message_id, user=current_user, invoke_from=InvokeFrom.DEBUGGER
             )
         except MessageNotExistsError:
             raise NotFound("Message not found")
@@ -380,7 +378,7 @@ class MessageFeedbackExportApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    def get(self, app_model: App):
+    def get(self, app_model):
         args = FeedbackExportQuery.model_validate(request.args.to_dict())
 
         # Import the service function
@@ -418,11 +416,11 @@ class MessageApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    def get(self, app_model: App, message_id: UUID):
-        message_id_str = str(message_id)
+    def get(self, app_model, message_id: str):
+        message_id = str(message_id)
 
         message = db.session.scalar(
-            select(Message).where(Message.id == message_id_str, Message.app_id == app_model.id).limit(1)
+            select(Message).where(Message.id == message_id, Message.app_id == app_model.id).limit(1)
         )
 
         if not message:

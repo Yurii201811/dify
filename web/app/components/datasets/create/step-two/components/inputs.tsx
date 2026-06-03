@@ -72,14 +72,12 @@ export const DelimiterInput: FC<InputProps & { tooltip?: string }> = ({ tooltip,
 }
 
 type CompoundNumberInputProps = Omit<NumberFieldRootProps, 'children' | 'className' | 'onValueChange'> & Omit<NumberFieldInputProps, 'children' | 'size' | 'onChange'> & {
-  label: string
   unit?: ReactNode
   size?: NumberFieldSize
   onChange: (value: number) => void
 }
 
 function CompoundNumberInput({
-  label,
   onChange,
   unit,
   size = 'large',
@@ -106,7 +104,6 @@ function CompoundNumberInput({
       <NumberFieldGroup size={size}>
         <NumberFieldInput
           {...inputProps}
-          aria-label={label}
           size={size}
           className={className}
           onBlur={onBlur}
@@ -125,22 +122,18 @@ function CompoundNumberInput({
   )
 }
 
-type LabeledCompoundNumberInputProps = Omit<CompoundNumberInputProps, 'label'>
-
-export const MaxLengthInput: FC<LabeledCompoundNumberInputProps> = (props) => {
+export const MaxLengthInput: FC<CompoundNumberInputProps> = (props) => {
   const maxValue = env.NEXT_PUBLIC_INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH
 
   const { t } = useTranslation()
-  const label = t('stepTwo.maxLength', { ns: 'datasetCreation' })
   return (
     <FormField label={(
       <div className="mb-1 system-sm-semibold">
-        {label}
+        {t('stepTwo.maxLength', { ns: 'datasetCreation' })}
       </div>
     )}
     >
       <CompoundNumberInput
-        label={label}
         size="large"
         placeholder={`≤ ${maxValue}`}
         max={maxValue}
@@ -151,13 +144,12 @@ export const MaxLengthInput: FC<LabeledCompoundNumberInputProps> = (props) => {
   )
 }
 
-export const OverlapInput: FC<LabeledCompoundNumberInputProps> = (props) => {
+export const OverlapInput: FC<CompoundNumberInputProps> = (props) => {
   const { t } = useTranslation()
-  const label = t('stepTwo.overlap', { ns: 'datasetCreation' })
   return (
     <FormField label={(
       <div className="mb-1 flex items-center">
-        <span className="system-sm-semibold">{label}</span>
+        <span className="system-sm-semibold">{t('stepTwo.overlap', { ns: 'datasetCreation' })}</span>
         <Infotip aria-label={t('stepTwo.overlapTip', { ns: 'datasetCreation' })} popupClassName="max-w-[200px]">
           {t('stepTwo.overlapTip', { ns: 'datasetCreation' })}
         </Infotip>
@@ -165,9 +157,8 @@ export const OverlapInput: FC<LabeledCompoundNumberInputProps> = (props) => {
     )}
     >
       <CompoundNumberInput
-        label={label}
         size="large"
-        placeholder={label || ''}
+        placeholder={t('stepTwo.overlap', { ns: 'datasetCreation' }) || ''}
         min={1}
         {...props}
       />

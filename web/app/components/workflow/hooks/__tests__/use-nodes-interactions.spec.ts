@@ -177,7 +177,9 @@ describe('useNodesInteractions', () => {
 
     const { result, store } = renderWorkflowHook(() => useNodesInteractions(), {
       initialStoreState: {
-        contextMenuTarget: { type: 'edge', edgeId: 'edge-1' },
+        edgeMenu: {
+          id: 'edge-1',
+        } as never,
       },
       historyStore: {
         nodes: historyNodes,
@@ -192,7 +194,7 @@ describe('useNodesInteractions', () => {
     expect(mockUndo).toHaveBeenCalledTimes(1)
     expect(rfState.setNodes).toHaveBeenCalledWith(historyNodes)
     expect(rfState.setEdges).toHaveBeenCalledWith(historyEdges)
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
   })
 
   it('skips undo and redo when the workflow is read-only', () => {

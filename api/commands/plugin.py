@@ -11,7 +11,6 @@ from configs import dify_config
 from core.helper import encrypter
 from core.plugin.entities.plugin_daemon import CredentialType
 from core.plugin.impl.plugin import PluginInstaller
-from core.plugin.plugin_service import PluginService
 from core.tools.utils.system_encryption import encrypt_system_params
 from extensions.ext_database import db
 from models import Tenant
@@ -21,6 +20,7 @@ from models.source import DataSourceApiKeyAuthBinding, DataSourceOauthBinding
 from models.tools import ToolOAuthSystemClient
 from services.plugin.data_migration import PluginDataMigration
 from services.plugin.plugin_migration import PluginMigration
+from services.plugin.plugin_service import PluginService
 
 logger = logging.getLogger(__name__)
 

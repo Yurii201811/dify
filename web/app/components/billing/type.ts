@@ -71,6 +71,10 @@ export type CurrentPlanInfoBackend = {
     size: number
     limit: number // total. 0 means unlimited
   }
+  vector_space: {
+    size: number
+    limit: number // total. 0 means unlimited
+  }
   annotation_quota_limit: {
     size: number
     limit: number // total. 0 means unlimited
@@ -91,7 +95,6 @@ export type CurrentPlanInfoBackend = {
   }
   webapp_copyright_enabled: boolean
   workspace_members: {
-    enabled?: boolean
     size: number
     limit: number
   }

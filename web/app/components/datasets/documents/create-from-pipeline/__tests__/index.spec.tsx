@@ -42,16 +42,6 @@ vi.mock('@/context/provider-context', () => ({
     selector({ plan: mockPlan, enableBilling: true }),
 }))
 
-vi.mock('@/service/use-billing', () => ({
-  useCurrentPlanVectorSpace: () => ({
-    data: {
-      size: mockPlan.usage.vectorSpace,
-      limit: mockPlan.total.vectorSpace,
-    },
-    isFetching: false,
-  }),
-}))
-
 vi.mock('@/context/dataset-detail', () => ({
   useDatasetDetailContextWithSelector: (selector: (state: { dataset: { pipeline_id: string } }) => unknown) =>
     selector({ dataset: { pipeline_id: 'test-pipeline-id' } }),

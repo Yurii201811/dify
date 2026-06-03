@@ -54,11 +54,9 @@ vi.mock('@/context/app-context', () => ({
 
 vi.mock('@/service/client', () => ({
   consoleClient: {
-    systemFeatures: {
-      get: () => ({
-        enable_collaboration_mode: globalFeatureState.enableCollaboration,
-      }),
-    },
+    systemFeatures: () => ({
+      enable_collaboration_mode: globalFeatureState.enableCollaboration,
+    }),
     workflowComments: {
       create: (...args: unknown[]) => mockCreateWorkflowComment(...args),
       delete: (...args: unknown[]) => mockDeleteWorkflowComment(...args),
@@ -75,9 +73,7 @@ vi.mock('@/service/client', () => ({
   },
   consoleQuery: {
     systemFeatures: {
-      get: {
-        queryKey: () => ['console', 'systemFeatures', 'get'],
-      },
+      queryKey: () => ['console', 'systemFeatures'],
     },
   },
 }))

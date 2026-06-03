@@ -22,7 +22,7 @@ vi.mock('@/config', async (importOriginal) => {
 
 const renderPanelHook = (provider: ModelProvider | undefined) =>
   renderHookWithSystemFeatures(() => useCredentialPanelState(provider), {
-    trialModels: mockTrialModels,
+    systemFeatures: { trial_models: mockTrialModels as never },
   })
 
 const createProvider = (overrides: Partial<ModelProvider> = {}): ModelProvider => ({

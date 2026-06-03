@@ -52,11 +52,11 @@ const VarPicker: FC<Props> = ({
       <PopoverTrigger
         nativeButton={false}
         render={(
-          <div className={cn('group', triggerClassName)}>
+          <div className={cn(triggerClassName)}>
             <div className={cn(
               className,
               notSetVar ? 'border-[#FEDF89] bg-[#FFFCF5] text-[#DC6803]' : 'border-components-button-secondary-border text-text-accent hover:bg-components-button-secondary-bg',
-              'bg-transparent group-data-popup-open:bg-components-button-secondary-bg',
+              open ? 'bg-components-button-secondary-bg' : 'bg-transparent',
               `
               flex h-8 cursor-pointer items-center justify-center space-x-1 rounded-lg border px-2 text-[13px]
               font-medium shadow-xs
@@ -74,7 +74,7 @@ const VarPicker: FC<Props> = ({
                       </div>
                     )}
               </div>
-              <ChevronDownIcon className="size-3.5 group-data-popup-open:rotate-180 group-data-popup-open:text-text-tertiary" />
+              <ChevronDownIcon className={cn(open && 'rotate-180 text-text-tertiary', 'size-3.5')} />
             </div>
           </div>
         )}

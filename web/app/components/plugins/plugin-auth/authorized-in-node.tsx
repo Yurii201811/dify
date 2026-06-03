@@ -1,11 +1,9 @@
-import type { StatusDotStatus } from '@langgenius/dify-ui/status-dot'
 import type {
   Credential,
   PluginPayload,
 } from './types'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { RiArrowDownSLine } from '@remixicon/react'
 import {
   memo,
@@ -13,6 +11,7 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import Indicator from '@/app/components/header/indicator'
 import {
   Authorized,
   usePluginAuth,
@@ -37,12 +36,12 @@ const AuthorizedInNode = ({
     disabled,
     invalidPluginCredentialInfo,
     notAllowCustomCredential,
-  } = usePluginAuth(pluginPayload, true, credentialId ? [credentialId] : undefined)
+  } = usePluginAuth(pluginPayload, true)
   const renderTrigger = useCallback((open?: boolean) => {
     let label = ''
     let removed = false
     let unavailable = false
-    let color: StatusDotStatus = 'success'
+    let color = 'green'
     let defaultUnavailable = false
     if (!credentialId) {
       label = t('auth.workspaceDefault', { ns: 'plugin' })
@@ -50,7 +49,7 @@ const AuthorizedInNode = ({
       const defaultCredential = credentials.find(c => c.is_default)
 
       if (defaultCredential?.not_allowed_to_use) {
-        color = 'disabled'
+        color = 'gray'
         defaultUnavailable = true
       }
     }
@@ -61,9 +60,9 @@ const AuthorizedInNode = ({
       unavailable = !!credential?.not_allowed_to_use && !credential?.from_enterprise
 
       if (removed)
-        color = 'error'
+        color = 'red'
       else if (unavailable)
-        color = 'disabled'
+        color = 'gray'
     }
     return (
       <Button
@@ -74,9 +73,9 @@ const AuthorizedInNode = ({
         )}
         variant={(defaultUnavailable || unavailable) ? 'ghost' : 'secondary'}
       >
-        <StatusDot
+        <Indicator
           className="mr-1.5"
-          status={color}
+          color={color as any}
         />
         {label}
         {

@@ -4,16 +4,6 @@ export type ClientOptions = {
   baseUrl: `${string}://${string}/console/api` | (string & {})
 }
 
-export type HumanInputFormSubmitPayload = {
-  action: string
-  form_inputs: {
-    [key: string]: unknown
-  }
-  inputs: {
-    [key: string]: unknown
-  }
-}
-
 export type GetFormHumanInputByFormTokenData = {
   body?: never
   path: {
@@ -33,7 +23,7 @@ export type GetFormHumanInputByFormTokenResponse
   = GetFormHumanInputByFormTokenResponses[keyof GetFormHumanInputByFormTokenResponses]
 
 export type PostFormHumanInputByFormTokenData = {
-  body: HumanInputFormSubmitPayload
+  body?: never
   path: {
     form_token: string
   }

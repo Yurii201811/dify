@@ -2,10 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import VersionHistoryButton from '../version-history-button'
 
 let mockTheme: 'light' | 'dark' = 'light'
-const hotkeyRegistrations = vi.hoisted(() => new Map<string, {
-  callback: () => void
-  options?: { ignoreInputs?: boolean }
-}>())
+const workflowShortcutHandlers = vi.hoisted(() => new Map<string, () => void | Promise<void>>())
 
 vi.mock('@/hooks/use-theme', () => ({
   default: () => ({
@@ -13,15 +10,11 @@ vi.mock('@/hooks/use-theme', () => ({
   }),
 }))
 
-vi.mock('@tanstack/react-hotkeys', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-hotkeys')>()
-  return {
-    ...actual,
-    useHotkey: (hotkey: string, callback: () => void, options?: { ignoreInputs?: boolean }) => {
-      hotkeyRegistrations.set(hotkey, { callback, options })
-    },
-  }
-})
+vi.mock('../../shortcuts/use-workflow-hotkeys', () => ({
+  useWorkflowShortcut: (id: string, callback: () => void | Promise<void>) => {
+    workflowShortcutHandlers.set(id, callback)
+  },
+}))
 
 vi.mock('@langgenius/dify-ui/tooltip', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -32,7 +25,7 @@ vi.mock('@langgenius/dify-ui/tooltip', () => ({
 describe('VersionHistoryButton', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    hotkeyRegistrations.clear()
+    workflowShortcutHandlers.clear()
     mockTheme = 'light'
   })
 
@@ -50,13 +43,10 @@ describe('VersionHistoryButton', () => {
     render(<VersionHistoryButton onClick={onClick} />)
 
     await act(async () => {
-      hotkeyRegistrations.get('Mod+Shift+H')?.callback()
+      await workflowShortcutHandlers.get('workflow.version-history')?.()
     })
 
     expect(onClick).toHaveBeenCalledTimes(1)
-    expect(hotkeyRegistrations.get('Mod+Shift+H')?.options).toEqual(
-      expect.objectContaining({ ignoreInputs: true }),
-    )
   })
 
   it('should render the tooltip popup content on hover', async () => {

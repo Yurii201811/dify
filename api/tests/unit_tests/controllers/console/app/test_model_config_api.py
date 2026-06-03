@@ -5,7 +5,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from flask import Flask
 
 from controllers.console.app import model_config as model_config_module
 from models.model import AppMode, AppModelConfig
@@ -20,7 +19,7 @@ def _unwrap(func):
     return func
 
 
-def test_post_updates_app_model_config_for_chat(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_post_updates_app_model_config_for_chat(app, monkeypatch: pytest.MonkeyPatch) -> None:
     api = model_config_module.ModelConfigResource()
     method = _unwrap(api.post)
 
@@ -37,6 +36,8 @@ def test_post_updates_app_model_config_for_chat(app: Flask, monkeypatch: pytest.
         "validate_configuration",
         lambda **_kwargs: {"pre_prompt": "hi"},
     )
+    monkeypatch.setattr(model_config_module, "current_account_with_tenant", lambda: (SimpleNamespace(id="u1"), "t1"))
+
     session = MagicMock()
     monkeypatch.setattr(model_config_module.db, "session", session)
 
@@ -50,7 +51,7 @@ def test_post_updates_app_model_config_for_chat(app: Flask, monkeypatch: pytest.
     monkeypatch.setattr(model_config_module.app_model_config_was_updated, "send", send_mock)
 
     with app.test_request_context("/console/api/apps/app-1/model-config", method="POST", json={"pre_prompt": "hi"}):
-        response = method("t1", "u1", app_model=app_model)
+        response = method(app_model=app_model)
 
     session.add.assert_called_once()
     session.flush.assert_called_once()
@@ -60,7 +61,7 @@ def test_post_updates_app_model_config_for_chat(app: Flask, monkeypatch: pytest.
     assert response["result"] == "success"
 
 
-def test_post_encrypts_agent_tool_parameters(app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_post_encrypts_agent_tool_parameters(app, monkeypatch: pytest.MonkeyPatch) -> None:
     api = model_config_module.ModelConfigResource()
     method = _unwrap(api.post)
 
@@ -114,6 +115,8 @@ def test_post_encrypts_agent_tool_parameters(app: Flask, monkeypatch: pytest.Mon
             },
         },
     )
+    monkeypatch.setattr(model_config_module, "current_account_with_tenant", lambda: (SimpleNamespace(id="u1"), "t1"))
+
     monkeypatch.setattr(model_config_module.ToolManager, "get_agent_tool_runtime", lambda **_kwargs: object())
 
     class _ParamManager:
@@ -137,7 +140,7 @@ def test_post_encrypts_agent_tool_parameters(app: Flask, monkeypatch: pytest.Mon
     monkeypatch.setattr(model_config_module.app_model_config_was_updated, "send", send_mock)
 
     with app.test_request_context("/console/api/apps/app-1/model-config", method="POST", json={"pre_prompt": "hi"}):
-        response = method("t1", "u1", app_model=app_model)
+        response = method(app_model=app_model)
 
     stored_config = session.add.call_args[0][0]
     stored_agent_mode = json.loads(stored_config.agent_mode)

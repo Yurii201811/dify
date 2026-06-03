@@ -2,35 +2,14 @@
 
 import { oc } from '@orpc/contract'
 
-import { zGetFeaturesResponse, zGetFeaturesVectorSpaceResponse } from './zod.gen'
+import { zGetFeaturesResponse } from './zod.gen'
 
 /**
- * Get vector-space usage and limit for current tenant
+ * Get feature configuration for current tenant
  *
- * Get vector-space usage and limit for current tenant
+ * Get feature configuration for current tenant
  */
 export const get = oc
-  .route({
-    description: 'Get vector-space usage and limit for current tenant',
-    inputStructure: 'detailed',
-    method: 'GET',
-    operationId: 'getFeaturesVectorSpace',
-    path: '/features/vector-space',
-    summary: 'Get vector-space usage and limit for current tenant',
-    tags: ['console'],
-  })
-  .output(zGetFeaturesVectorSpaceResponse)
-
-export const vectorSpace = {
-  get,
-}
-
-/**
- * Get feature configuration for current tenant
- *
- * Get feature configuration for current tenant
- */
-export const get2 = oc
   .route({
     description: 'Get feature configuration for current tenant',
     inputStructure: 'detailed',
@@ -43,8 +22,7 @@ export const get2 = oc
   .output(zGetFeaturesResponse)
 
 export const features = {
-  get: get2,
-  vectorSpace,
+  get,
 }
 
 export const contract = {

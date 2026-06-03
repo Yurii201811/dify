@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Virtualizer } from '@tanstack/react-virtual'
 import type { RefObject } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Combobox,
   ComboboxChip,
@@ -26,15 +26,9 @@ import {
   ComboboxStatus,
   ComboboxTrigger,
   ComboboxValue,
-  useComboboxFilter,
   useComboboxFilteredItems,
 } from '.'
 import { cn } from '../cn'
-import {
-  FieldDescription,
-  FieldLabel,
-  FieldRoot,
-} from '../field'
 
 type Option = {
   value: string
@@ -50,6 +44,8 @@ type OptionGroup = {
 }
 
 const fieldWidth = 'w-80'
+const wideFieldWidth = 'w-[520px]'
+const nativeFieldLabelClassName = 'mb-1 block text-text-secondary system-sm-medium'
 
 type StoryVirtualizer = Virtualizer<HTMLDivElement, Element>
 
@@ -178,37 +174,11 @@ const defaultDataSource = dataSourceOptions[0]!
 const defaultPopupDataSource = dataSourceOptions[1]!
 const readOnlyDataSource = dataSourceOptions[2]!
 const defaultTool = toolGroups[0]!.items[0]!
-const defaultReviewers = [reviewerOptions[0]!, reviewerOptions[1]!]
-const defaultAsyncReviewers = [reviewerOptions[1]!]
+const defaultReviewers = [reviewerOptions[0]!, reviewerOptions[2]!]
 const defaultTag = tagOptions[2]!
 
-const getOptionLabel = (option: Option) => option.label
-
-async function searchOptions(
-  options: Option[],
-  query: string,
-  filter: (item: string, query: string) => boolean,
-): Promise<{ items: Option[], error: string | null }> {
-  await new Promise(resolve => window.setTimeout(resolve, 450))
-
-  if (query === 'will_error') {
-    return {
-      items: [],
-      error: 'Failed to fetch matches. Please try again.',
-    }
-  }
-
-  return {
-    items: options.filter(option => (
-      filter(option.label, query)
-      || (option.meta ? filter(option.meta, query) : false)
-    )),
-    error: null,
-  }
-}
-
-const renderOptionItem = (option: Option) => (
-  <ComboboxItem key={option.value} value={option} disabled={option.disabled} className="h-auto min-h-8 py-1.5">
+const renderOptionItem = (option: Option, index?: number) => (
+  <ComboboxItem key={option.value} value={option} index={index} disabled={option.disabled}>
     <ComboboxItemText className="flex items-center gap-2 px-0">
       {option.icon && <span aria-hidden className={cn(option.icon, 'size-4 shrink-0 text-text-tertiary')} />}
       <span className="min-w-0 flex-1">
@@ -220,23 +190,9 @@ const renderOptionItem = (option: Option) => (
   </ComboboxItem>
 )
 
-const renderSimpleOptionItem = (option: Option) => (
-  <ComboboxItem key={option.value} value={option}>
+const renderSimpleOptionItem = (option: Option, index?: number) => (
+  <ComboboxItem key={option.value} value={option} index={index}>
     <ComboboxItemText>{option.label}</ComboboxItemText>
-    <ComboboxItemIndicator />
-  </ComboboxItem>
-)
-
-// Only virtualized items receive an explicit index; ordinary lists must let Base UI register items by DOM order for keyboard navigation.
-const renderVirtualizedOptionItem = (option: Option, index: number) => (
-  <ComboboxItem key={option.value} value={option} index={index} disabled={option.disabled} className="h-auto min-h-8 py-1.5">
-    <ComboboxItemText className="flex items-center gap-2 px-0">
-      {option.icon && <span aria-hidden className={cn(option.icon, 'size-4 shrink-0 text-text-tertiary')} />}
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-text-secondary system-sm-medium">{option.label}</span>
-        {option.meta && <span className="block truncate text-text-tertiary system-xs-regular">{option.meta}</span>}
-      </span>
-    </ComboboxItemText>
     <ComboboxItemIndicator />
   </ComboboxItem>
 )
@@ -248,20 +204,18 @@ const PopupSearchInput = ({
   label: string
   placeholder: string
 }) => (
-  <div className="p-1 pb-0">
-    <ComboboxInputGroup className="h-8 min-h-8 px-2">
-      <span aria-hidden className="mr-0.5 i-ri-search-line size-4 shrink-0 text-components-input-text-placeholder" />
-      <ComboboxInput aria-label={label} placeholder={`${placeholder}…`} className="block h-4.5 grow px-1 py-0 system-sm-regular text-components-input-text-filled" />
-      <ComboboxClear className="mr-0" />
-    </ComboboxInputGroup>
-  </div>
+  <ComboboxInputGroup className="mb-1 border-divider-subtle bg-components-input-bg-normal">
+    <span aria-hidden className="ml-2 i-ri-search-line size-4 shrink-0 text-text-tertiary" />
+    <ComboboxInput aria-label={label} placeholder={`${placeholder}…`} className="pl-2" />
+    <ComboboxClear />
+  </ComboboxInputGroup>
 )
 
 const GroupedToolList = () => {
   const groups = useComboboxFilteredItems<OptionGroup>()
 
   return (
-    <ComboboxList>
+    <ComboboxList className="p-0">
       {groups.map((group, groupIndex) => (
         <ComboboxGroup key={group.label} items={group.items}>
           {groupIndex > 0 && <ComboboxSeparator />}
@@ -323,7 +277,7 @@ const VirtualizedModelList = ({
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              {renderVirtualizedOptionItem(option, virtualItem.index)}
+              {renderOptionItem(option, virtualItem.index)}
             </div>
           )
         })}
@@ -355,6 +309,7 @@ const VirtualizedLongListDemo = () => {
         value={value}
         onValueChange={setValue}
         virtualized
+        autoHighlight
         onItemHighlighted={(item, details) => {
           scrollHighlightedVirtualItem(item, details, virtualizerRef.current)
         }}
@@ -363,7 +318,7 @@ const VirtualizedLongListDemo = () => {
         <ComboboxTrigger aria-label="Model catalog">
           <ComboboxValue placeholder="Select model" />
         </ComboboxTrigger>
-        <ComboboxContent popupClassName="w-[440px]">
+        <ComboboxContent popupClassName="w-[440px] p-1">
           <PopupSearchInput label="Filter model catalog" placeholder="Filter 1,000 models" />
           <FilteredModelStatus />
           <VirtualizedModelList virtualizerRef={virtualizerRef} />
@@ -375,246 +330,59 @@ const VirtualizedLongListDemo = () => {
 }
 
 const AsyncDirectoryDemo = () => {
-  const [searchResults, setSearchResults] = useState<Option[]>([])
-  const [selectedValue, setSelectedValue] = useState<Option | null>(null)
-  const [searchValue, setSearchValue] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
-  const { contains } = useComboboxFilter()
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const trimmedSearchValue = searchValue.trim()
-  const items = useMemo(() => {
-    if (!selectedValue || searchResults.some(option => option.value === selectedValue.value))
-      return searchResults
+  const [inputValue, setInputValue] = useState('ma')
+  const [value, setValue] = useState<Option | null>(null)
+  const [items, setItems] = useState(directoryOptions.slice(0, 3))
+  const [loading, setLoading] = useState(false)
 
-    return [...searchResults, selectedValue]
-  }, [searchResults, selectedValue])
+  useEffect(() => {
+    setLoading(true)
+    const timeout = window.setTimeout(() => {
+      const query = inputValue.trim().toLowerCase()
+      setItems(
+        query
+          ? directoryOptions.filter(option => `${option.label} ${option.meta}`.toLowerCase().includes(query))
+          : directoryOptions.slice(0, 5),
+      )
+      setLoading(false)
+    }, 450)
 
-  const status = (() => {
-    if (isPending)
-      return 'Searching directory matches…'
-
-    if (error)
-      return error
-
-    if (trimmedSearchValue === '')
-      return selectedValue ? null : 'Start typing to search owners…'
-
-    if (searchResults.length === 0)
-      return `No matches for "${trimmedSearchValue}".`
-
-    return `${searchResults.length} owner${searchResults.length === 1 ? '' : 's'} found`
-  })()
-
-  const emptyMessage = trimmedSearchValue === '' || isPending || searchResults.length > 0 || error
-    ? null
-    : 'Try a different owner search.'
+    return () => window.clearTimeout(timeout)
+  }, [inputValue])
 
   return (
-    <FieldRoot name="owner" className={fieldWidth}>
-      <FieldLabel>Owner</FieldLabel>
+    <div className={fieldWidth}>
       <Combobox
-        items={items}
-        itemToStringLabel={getOptionLabel}
-        filter={null}
-        value={selectedValue}
-        onOpenChangeComplete={(open) => {
-          if (!open && selectedValue)
-            setSearchResults([selectedValue])
-        }}
-        onValueChange={(nextSelectedValue) => {
-          setSelectedValue(nextSelectedValue)
-          setSearchValue('')
-          setError(null)
-        }}
-        onInputValueChange={(nextSearchValue, { reason }) => {
-          setSearchValue(nextSearchValue)
-
-          if (nextSearchValue === '') {
-            setSearchResults([])
-            setError(null)
-            return
-          }
-
-          if (reason === 'item-press')
-            return
-
-          const controller = new AbortController()
-          abortControllerRef.current?.abort()
-          abortControllerRef.current = controller
-
-          startTransition(async () => {
-            setError(null)
-
-            const result = await searchOptions(directoryOptions, nextSearchValue, contains)
-
-            if (controller.signal.aborted)
-              return
-
-            startTransition(() => {
-              setSearchResults(result.items)
-              setError(result.error)
-            })
-          })
-        }}
+        items={value && !items.some(item => item.value === value.value) ? [value, ...items] : items}
+        value={value}
+        onValueChange={setValue}
+        inputValue={inputValue}
+        onInputValueChange={setInputValue}
+        autoHighlight
       >
-        <ComboboxInputGroup className="h-8 min-h-8 px-2">
-          <span aria-hidden className="mr-0.5 i-ri-search-line size-4 shrink-0 text-components-input-text-placeholder" />
-          <ComboboxInput placeholder="Search owners…" className="block h-4.5 grow px-1 py-0 system-sm-regular text-components-input-text-filled" />
-          <ComboboxClear className="mr-0.5" />
-          <ComboboxInputTrigger className="mr-0" />
-        </ComboboxInputGroup>
-        <ComboboxContent popupClassName="w-[420px]" popupProps={{ 'aria-busy': isPending || undefined }}>
+        <label className={nativeFieldLabelClassName}>
+          Owner
+          <ComboboxInputGroup className="mt-1">
+            <span aria-hidden className="ml-3 i-ri-search-line size-4 shrink-0 text-text-tertiary" />
+            <ComboboxInput placeholder="Search owners…" className="pl-2" />
+            <ComboboxClear />
+            <ComboboxInputTrigger />
+          </ComboboxInputGroup>
+        </label>
+        <ComboboxContent popupClassName="w-[420px]">
           <ComboboxStatus className="border-b border-divider-subtle">
-            {status}
+            {loading ? 'Loading directory matches…' : `${items.length} selectable owners`}
           </ComboboxStatus>
           <ComboboxList>{renderOptionItem}</ComboboxList>
-          <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
+          <ComboboxEmpty>No owner matches this query</ComboboxEmpty>
         </ComboboxContent>
       </Combobox>
-    </FieldRoot>
-  )
-}
-
-const AsyncReviewerDemo = () => {
-  const [searchResults, setSearchResults] = useState<Option[]>([])
-  const [selectedValues, setSelectedValues] = useState<Option[]>(defaultAsyncReviewers)
-  const [searchValue, setSearchValue] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [blockStartStatus, setBlockStartStatus] = useState(false)
-  const [isPending, startTransition] = useTransition()
-  const { contains } = useComboboxFilter()
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const selectedValuesRef = useRef<Option[]>(defaultAsyncReviewers)
-  const trimmedSearchValue = searchValue.trim()
-
-  const items = useMemo(() => {
-    if (selectedValues.length === 0)
-      return searchResults
-
-    const merged = [...searchResults]
-
-    selectedValues.forEach((selected) => {
-      if (!searchResults.some(result => result.value === selected.value))
-        merged.push(selected)
-    })
-
-    return merged
-  }, [searchResults, selectedValues])
-
-  const status = (() => {
-    if (isPending)
-      return 'Searching reviewer matches…'
-
-    if (error)
-      return error
-
-    if (trimmedSearchValue === '' && !blockStartStatus)
-      return selectedValues.length > 0 ? null : 'Start typing to search reviewers…'
-
-    if (searchResults.length === 0 && !blockStartStatus)
-      return `No matches for "${trimmedSearchValue}".`
-
-    return `${searchResults.length} reviewer${searchResults.length === 1 ? '' : 's'} found`
-  })()
-
-  const emptyMessage = trimmedSearchValue === '' || isPending || searchResults.length > 0 || error
-    ? null
-    : 'Try a different reviewer search.'
-
-  return (
-    <FieldRoot name="asyncReviewers" className={fieldWidth}>
-      <FieldLabel>Async reviewers</FieldLabel>
-      <Combobox
-        items={items}
-        itemToStringLabel={getOptionLabel}
-        multiple
-        filter={null}
-        value={selectedValues}
-        onOpenChangeComplete={(open) => {
-          if (!open) {
-            setSearchResults(selectedValuesRef.current)
-            setBlockStartStatus(false)
-          }
-        }}
-        onValueChange={(nextSelectedValues) => {
-          selectedValuesRef.current = nextSelectedValues
-          setSelectedValues(nextSelectedValues)
-          setSearchValue('')
-          setError(null)
-
-          if (nextSelectedValues.length === 0) {
-            setSearchResults([])
-            setBlockStartStatus(false)
-          }
-          else {
-            setBlockStartStatus(true)
-          }
-        }}
-        onInputValueChange={(nextSearchValue, { reason }) => {
-          setSearchValue(nextSearchValue)
-
-          const controller = new AbortController()
-          abortControllerRef.current?.abort()
-          abortControllerRef.current = controller
-
-          if (nextSearchValue === '') {
-            setSearchResults(selectedValuesRef.current)
-            setError(null)
-            setBlockStartStatus(false)
-            return
-          }
-
-          if (reason === 'item-press')
-            return
-
-          startTransition(async () => {
-            setError(null)
-
-            const result = await searchOptions(reviewerOptions, nextSearchValue, contains)
-
-            if (controller.signal.aborted)
-              return
-
-            startTransition(() => {
-              setSearchResults(result.items)
-              setError(result.error)
-            })
-          })
-        }}
-      >
-        <ComboboxInputGroup className="h-auto min-h-8 items-start py-1">
-          <ComboboxChips>
-            <ComboboxValue>
-              {(selectedValue: Option[]) => (
-                <>
-                  {selectedValue.map(item => (
-                    <ComboboxChip key={item.value} aria-label={item.label}>
-                      <span className="max-w-32 truncate">{item.label}</span>
-                      <ComboboxChipRemove aria-label={`Remove ${item.label}`} />
-                    </ComboboxChip>
-                  ))}
-                  <ComboboxInput placeholder={selectedValue.length ? '' : 'Search reviewers…'} className="min-w-24 px-1 py-0.5" />
-                </>
-              )}
-            </ComboboxValue>
-          </ComboboxChips>
-        </ComboboxInputGroup>
-        <ComboboxContent popupClassName="w-[420px]" popupProps={{ 'aria-busy': isPending || undefined }}>
-          <ComboboxStatus className="border-b border-divider-subtle">
-            {status}
-          </ComboboxStatus>
-          <ComboboxList>{renderOptionItem}</ComboboxList>
-          <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
-        </ComboboxContent>
-      </Combobox>
-      <FieldDescription>Selected reviewers stay available while async matches change.</FieldDescription>
-    </FieldRoot>
+    </div>
   )
 }
 
 const meta = {
-  title: 'Base/Form/Combobox',
+  title: 'Base/UI/Combobox',
   component: Combobox,
   parameters: {
     layout: 'centered',
@@ -630,56 +398,34 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
-  render: () => (
-    <FieldRoot name="dataSource" className={fieldWidth}>
-      <FieldLabel>Connect source</FieldLabel>
-      <Combobox items={dataSourceOptions} defaultValue={defaultDataSource}>
-        <ComboboxInputGroup className="h-8 min-h-8 px-2">
-          <span aria-hidden className="mr-0.5 i-ri-search-line size-4 shrink-0 text-components-input-text-placeholder" />
-          <ComboboxInput placeholder="Search data sources…" className="block h-4.5 grow px-1 py-0 system-sm-regular text-components-input-text-filled" />
-          <ComboboxClear className="mr-0.5" />
-          <ComboboxInputTrigger className="mr-0" />
-        </ComboboxInputGroup>
-        <ComboboxContent>
-          <ComboboxList>{renderSimpleOptionItem}</ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-    </FieldRoot>
-  ),
-}
-
-export const FormField: Story = {
-  render: () => (
-    <FieldRoot name="sourceConnector" className={fieldWidth}>
-      <FieldLabel>Connect source</FieldLabel>
-      <Combobox items={dataSourceOptions} defaultValue={defaultDataSource}>
-        <ComboboxInputGroup className="h-8 min-h-8 px-2">
-          <span aria-hidden className="mr-0.5 i-ri-search-line size-4 shrink-0 text-components-input-text-placeholder" />
-          <ComboboxInput placeholder="Search data sources…" className="block h-4.5 grow px-1 py-0 system-sm-regular text-components-input-text-filled" />
-          <ComboboxClear className="mr-0.5" />
-          <ComboboxInputTrigger className="mr-0" />
-        </ComboboxInputGroup>
-        <ComboboxContent>
-          <ComboboxList>{renderSimpleOptionItem}</ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-      <FieldDescription>Type to filter, then choose a remembered data source.</FieldDescription>
-    </FieldRoot>
-  ),
-}
-
-export const CompactTriggerWithPopupSearch: Story = {
+export const SelectLikeDefault: Story = {
   render: () => (
     <div className={fieldWidth}>
-      <Combobox items={dataSourceOptions} defaultValue={defaultPopupDataSource}>
+      <Combobox items={providerOptions} defaultValue={defaultProvider} autoHighlight>
+        <ComboboxLabel>Model provider</ComboboxLabel>
+        <ComboboxTrigger aria-label="Model provider">
+          <ComboboxValue placeholder="Select provider" />
+        </ComboboxTrigger>
+        <ComboboxContent popupClassName="p-1">
+          <PopupSearchInput label="Search model providers" placeholder="Search providers" />
+          <ComboboxList className="p-0">{renderOptionItem}</ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </div>
+  ),
+}
+
+export const PopupInputSearchableSelect: Story = {
+  render: () => (
+    <div className={fieldWidth}>
+      <Combobox items={dataSourceOptions} defaultValue={defaultPopupDataSource} autoHighlight>
         <ComboboxLabel>Data source</ComboboxLabel>
         <ComboboxTrigger aria-label="Data source">
           <ComboboxValue placeholder="Choose source" />
         </ComboboxTrigger>
-        <ComboboxContent>
+        <ComboboxContent popupClassName="p-1">
           <PopupSearchInput label="Search data sources" placeholder="Search sources" />
-          <ComboboxList>{renderOptionItem}</ComboboxList>
+          <ComboboxList className="p-0">{renderOptionItem}</ComboboxList>
         </ComboboxContent>
       </Combobox>
     </div>
@@ -690,28 +436,40 @@ export const AsyncSearchSingle: Story = {
   render: () => <AsyncDirectoryDemo />,
 }
 
-export const AsyncSearchMultiple: Story = {
-  render: () => <AsyncReviewerDemo />,
+export const InputGroupSearchable: Story = {
+  render: () => (
+    <div className={fieldWidth}>
+      <Combobox items={dataSourceOptions} defaultValue={defaultDataSource} autoHighlight>
+        <label className={nativeFieldLabelClassName}>
+          Connect source
+          <ComboboxInputGroup className="mt-1">
+            <span aria-hidden className="ml-3 i-ri-search-line size-4 shrink-0 text-text-tertiary" />
+            <ComboboxInput placeholder="Search data sources…" className="pl-2" />
+            <ComboboxClear />
+            <ComboboxInputTrigger />
+          </ComboboxInputGroup>
+        </label>
+        <ComboboxContent>
+          <ComboboxList>{renderOptionItem}</ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </div>
+  ),
 }
 
 export const Sizes: Story = {
   render: () => (
     <div className="flex w-80 flex-col gap-3">
       {(['small', 'medium', 'large'] as const).map(size => (
-        <FieldRoot key={size} name={`provider-${size}`}>
-          <FieldLabel>{`${size[0]!.toUpperCase()}${size.slice(1)}`}</FieldLabel>
-          <Combobox items={sizeOptions} defaultValue={defaultProvider}>
-            <ComboboxInputGroup size={size} className="px-2">
-              <span aria-hidden className="mr-0.5 i-ri-search-line size-4 shrink-0 text-components-input-text-placeholder" />
-              <ComboboxInput size={size} placeholder="Search providers…" className="px-1" />
-              <ComboboxClear size={size} className="mr-0.5" />
-              <ComboboxInputTrigger size={size} className="mr-0" />
-            </ComboboxInputGroup>
-            <ComboboxContent>
-              <ComboboxList>{renderOptionItem}</ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-        </FieldRoot>
+        <Combobox key={size} items={sizeOptions} defaultValue={defaultProvider} autoHighlight>
+          <ComboboxTrigger aria-label={`${size} model provider`} size={size}>
+            <ComboboxValue />
+          </ComboboxTrigger>
+          <ComboboxContent popupClassName="p-1">
+            <PopupSearchInput label={`Search ${size} model providers`} placeholder="Search providers" />
+            <ComboboxList className="p-0">{renderOptionItem}</ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       ))}
     </div>
   ),
@@ -720,12 +478,12 @@ export const Sizes: Story = {
 export const Grouped: Story = {
   render: () => (
     <div className={fieldWidth}>
-      <Combobox items={toolGroups} defaultValue={defaultTool}>
+      <Combobox items={toolGroups} defaultValue={defaultTool} autoHighlight>
         <ComboboxLabel>Workflow tool</ComboboxLabel>
         <ComboboxTrigger aria-label="Workflow tool">
           <ComboboxValue placeholder="Select tool" />
         </ComboboxTrigger>
-        <ComboboxContent>
+        <ComboboxContent popupClassName="p-1">
           <PopupSearchInput label="Search workflow tools" placeholder="Search workflow tools" />
           <GroupedToolList />
         </ComboboxContent>
@@ -738,32 +496,35 @@ const MultipleChipsDemo = () => {
   const [value, setValue] = useState<Option[]>(defaultReviewers)
 
   return (
-    <FieldRoot name="reviewers" className={fieldWidth}>
-      <FieldLabel>Reviewers</FieldLabel>
-      <Combobox items={reviewerOptions} multiple value={value} onValueChange={setValue}>
-        <ComboboxInputGroup className="h-auto min-h-8 items-start py-1">
-          <ComboboxChips>
+    <div className={wideFieldWidth}>
+      <Combobox items={reviewerOptions} multiple value={value} onValueChange={setValue} autoHighlight>
+        <label className={nativeFieldLabelClassName}>
+          Reviewers
+          <ComboboxInputGroup className="mt-1 h-auto min-h-8 flex-nowrap py-1">
             <ComboboxValue>
               {(selectedValue: Option[]) => (
                 <>
-                  {selectedValue.map(item => (
-                    <ComboboxChip key={item.value}>
-                      <span className="max-w-32 truncate">{item.label}</span>
-                      <ComboboxChipRemove aria-label={`Remove ${item.label}`} />
-                    </ComboboxChip>
-                  ))}
-                  <ComboboxInput placeholder={selectedValue.length ? '' : 'Assign reviewers…'} className="min-w-24 px-1 py-0.5" />
+                  <ComboboxChips className="flex-nowrap">
+                    {selectedValue.map(item => (
+                      <ComboboxChip key={item.value}>
+                        <span className="max-w-32 truncate">{item.label}</span>
+                        <ComboboxChipRemove aria-label={`Remove ${item.label}`} />
+                      </ComboboxChip>
+                    ))}
+                  </ComboboxChips>
+                  <ComboboxInput placeholder={selectedValue.length ? '' : 'Assign reviewers…'} className="min-w-16 px-2" />
                 </>
               )}
             </ComboboxValue>
-          </ComboboxChips>
-        </ComboboxInputGroup>
+            <ComboboxClear />
+            <ComboboxInputTrigger />
+          </ComboboxInputGroup>
+        </label>
         <ComboboxContent>
           <ComboboxList>{renderOptionItem}</ComboboxList>
         </ComboboxContent>
       </Combobox>
-      <FieldDescription>Selected reviewers wrap inside the input instead of scrolling horizontally.</FieldDescription>
-    </FieldRoot>
+    </div>
   )
 }
 
@@ -777,53 +538,53 @@ export const VirtualizedLongList: Story = {
 
 export const EmptyAndStatus: Story = {
   render: () => (
-    <FieldRoot name="connector" className={fieldWidth}>
-      <FieldLabel>Connector</FieldLabel>
-      <Combobox items={emptyOptions} defaultInputValue="salesforce">
-        <ComboboxInputGroup className="h-8 min-h-8 px-2">
-          <span aria-hidden className="mr-0.5 i-ri-search-line size-4 shrink-0 text-components-input-text-placeholder" />
-          <ComboboxInput placeholder="Search connectors…" className="block h-4.5 grow px-1 py-0 system-sm-regular text-components-input-text-filled" />
-          <ComboboxClear className="mr-0.5" />
-          <ComboboxInputTrigger className="mr-0" />
-        </ComboboxInputGroup>
+    <div className={fieldWidth}>
+      <Combobox items={emptyOptions} defaultInputValue="salesforce" autoHighlight>
+        <label className={nativeFieldLabelClassName}>
+          Connector
+          <ComboboxInputGroup className="mt-1">
+            <span aria-hidden className="ml-3 i-ri-search-line size-4 shrink-0 text-text-tertiary" />
+            <ComboboxInput placeholder="Search connectors…" className="pl-2" />
+            <ComboboxClear />
+            <ComboboxInputTrigger />
+          </ComboboxInputGroup>
+        </label>
         <ComboboxContent>
           <ComboboxStatus>Search workspace connectors</ComboboxStatus>
           <ComboboxEmpty>No connectors found</ComboboxEmpty>
           <ComboboxList>{renderSimpleOptionItem}</ComboboxList>
         </ComboboxContent>
       </Combobox>
-    </FieldRoot>
+    </div>
   ),
 }
 
 export const DisabledAndReadOnly: Story = {
   render: () => (
     <div className="flex w-80 flex-col gap-3">
-      <FieldRoot name="disabledProvider" disabled>
-        <Combobox items={providerOptions} defaultValue={disabledProvider} disabled>
-          <ComboboxLabel>Disabled provider</ComboboxLabel>
-          <ComboboxTrigger aria-label="Disabled model provider">
-            <ComboboxValue />
-          </ComboboxTrigger>
-          <ComboboxContent>
-            <PopupSearchInput label="Search disabled providers" placeholder="Search providers" />
-            <ComboboxList>{renderOptionItem}</ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </FieldRoot>
-      <FieldRoot name="readOnlySource">
-        <FieldLabel>Read-only source</FieldLabel>
-        <Combobox items={dataSourceOptions} defaultValue={readOnlyDataSource} readOnly>
-          <ComboboxInputGroup className="h-8 min-h-8 px-2">
-            <ComboboxInput placeholder="Read-only data source…" className="block h-4.5 grow px-1 py-0 system-sm-regular text-components-input-text-filled" />
-            <ComboboxClear className="mr-0.5" />
-            <ComboboxInputTrigger className="mr-0" />
+      <Combobox items={providerOptions} defaultValue={disabledProvider} disabled>
+        <ComboboxLabel>Disabled provider</ComboboxLabel>
+        <ComboboxTrigger aria-label="Disabled model provider">
+          <ComboboxValue />
+        </ComboboxTrigger>
+        <ComboboxContent popupClassName="p-1">
+          <PopupSearchInput label="Search disabled providers" placeholder="Search providers" />
+          <ComboboxList className="p-0">{renderOptionItem}</ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      <Combobox items={dataSourceOptions} defaultValue={readOnlyDataSource} readOnly>
+        <label className={nativeFieldLabelClassName}>
+          Read-only source
+          <ComboboxInputGroup className="mt-1">
+            <ComboboxInput placeholder="Read-only data source…" />
+            <ComboboxClear />
+            <ComboboxInputTrigger />
           </ComboboxInputGroup>
-          <ComboboxContent>
-            <ComboboxList>{renderOptionItem}</ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </FieldRoot>
+        </label>
+        <ComboboxContent>
+          <ComboboxList>{renderOptionItem}</ComboboxList>
+        </ComboboxContent>
+      </Combobox>
     </div>
   ),
 }
@@ -833,18 +594,16 @@ const ControlledDemo = () => {
 
   return (
     <div className="flex w-80 flex-col items-start gap-3">
-      <div className="w-full">
-        <Combobox items={tagOptions} value={value} onValueChange={setValue}>
-          <ComboboxLabel>Default app tag</ComboboxLabel>
-          <ComboboxTrigger aria-label="Default app tag">
-            <ComboboxValue placeholder="Select tag" />
-          </ComboboxTrigger>
-          <ComboboxContent>
-            <PopupSearchInput label="Search app tags" placeholder="Search tags" />
-            <ComboboxList>{renderSimpleOptionItem}</ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </div>
+      <Combobox items={tagOptions} value={value} onValueChange={setValue}>
+        <ComboboxLabel>Default app tag</ComboboxLabel>
+        <ComboboxTrigger aria-label="Default app tag">
+          <ComboboxValue placeholder="Select tag" />
+        </ComboboxTrigger>
+        <ComboboxContent popupClassName="p-1">
+          <PopupSearchInput label="Search app tags" placeholder="Search tags" />
+          <ComboboxList className="p-0">{renderSimpleOptionItem}</ComboboxList>
+        </ComboboxContent>
+      </Combobox>
       <span className="rounded-md border border-divider-subtle bg-components-panel-bg px-2 py-1 text-text-tertiary system-xs-regular">
         Selected:
         {' '}

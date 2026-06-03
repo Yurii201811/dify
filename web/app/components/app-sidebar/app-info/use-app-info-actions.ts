@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next'
 import { useStore as useAppStore } from '@/app/components/app/store'
 import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useProviderContext } from '@/context/provider-context'
-import { useSetLocalStorage } from '@/hooks/use-local-storage'
 import { useRouter } from '@/next/navigation'
 import { copyApp, deleteApp, exportAppConfig, fetchAppDetail, updateAppInfo } from '@/service/apps'
 import { useInvalidateAppList } from '@/service/use-apps'
@@ -107,8 +106,6 @@ export function useAppInfoActions({ onDetailExpand, resetKey }: UseAppInfoAction
   const closeModal = useCallback(() => {
     setActiveModal(null)
   }, [setActiveModal])
-
-  const setNeedRefresh = useSetLocalStorage<string>(NEED_REFRESH_APP_LIST_KEY, { raw: true })
 
   const emitAppMetaUpdate = useCallback(() => {
     if (!appDetail?.id)
@@ -211,7 +208,7 @@ export function useAppInfoActions({ onDetailExpand, resetKey }: UseAppInfoAction
       })
       closeModal()
       toast(t('newApp.appCreated', { ns: 'app' }), { type: 'success' })
-      setNeedRefresh('1')
+      localStorage.setItem(NEED_REFRESH_APP_LIST_KEY, '1')
       onPlanInfoChanged()
       getRedirection(true, newApp, replace)
     }

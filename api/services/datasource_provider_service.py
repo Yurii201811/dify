@@ -1,10 +1,7 @@
 import logging
 import time
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from models.account import Account
+from typing import Any
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session, sessionmaker
@@ -17,13 +14,13 @@ from core.helper.provider_cache import NoOpProviderCredentialCache
 from core.plugin.entities.plugin_daemon import CredentialType
 from core.plugin.impl.datasource import PluginDatasourceManager
 from core.plugin.impl.oauth import OAuthHandler
-from core.plugin.plugin_service import PluginService
 from core.tools.utils.encryption import ProviderConfigCache, ProviderConfigEncrypter, create_provider_encrypter
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
 from graphon.model_runtime.entities.provider_entities import FormType
 from models.oauth import DatasourceOauthParamConfig, DatasourceOauthTenantParamConfig, DatasourceProvider
 from models.provider_ids import DatasourceProviderID
+from services.plugin.plugin_service import PluginService
 
 logger = logging.getLogger(__name__)
 
@@ -794,42 +791,24 @@ class DatasourceProviderService:
 
         return secret_input_form_variables
 
-    def list_datasource_credentials(
-        self,
-        tenant_id: str,
-        provider: str,
-        plugin_id: str,
-        user: "Account | None" = None,
-    ) -> list[dict]:
+    def list_datasource_credentials(self, tenant_id: str, provider: str, plugin_id: str) -> list[dict]:
         """
-        list datasource credentials with obfuscated sensitive fields,
-        filtered by visibility.
+        list datasource credentials with obfuscated sensitive fields.
 
         :param tenant_id: workspace id
-        :param provider: provider name
-        :param plugin_id: plugin id
-        :param user: current user (id + admin flag drive the visibility filter)
+        :param provider_id: provider id
         :return:
         """
-        from models.credential_permission import CredentialType as CredPermType
-        from services.credential_permission_service import CredentialPermissionService
-
         # Get all provider configurations of the current workspace
-        query = select(DatasourceProvider).where(
-            DatasourceProvider.tenant_id == tenant_id,
-            DatasourceProvider.provider == provider,
-            DatasourceProvider.plugin_id == plugin_id,
+        datasource_providers: list[DatasourceProvider] = list(
+            db.session.scalars(
+                select(DatasourceProvider).where(
+                    DatasourceProvider.tenant_id == tenant_id,
+                    DatasourceProvider.provider == provider,
+                    DatasourceProvider.plugin_id == plugin_id,
+                )
+            ).all()
         )
-        if user is not None:
-            query = CredentialPermissionService.apply_visibility_filter(
-                query,
-                model_id_column=DatasourceProvider.id,
-                model_user_id_column=DatasourceProvider.user_id,
-                model_visibility_column=DatasourceProvider.visibility,
-                credential_type=CredPermType.DATASOURCE_PROVIDER,
-                user=user,
-            )
-        datasource_providers: list[DatasourceProvider] = list(db.session.scalars(query).all())
         if not datasource_providers:
             return []
         copy_credentials_list = []

@@ -1,9 +1,9 @@
 import type { ModelProvider } from '../declarations'
 import type { CardVariant } from './use-credential-panel-state'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import Warning from '@/app/components/base/icons/src/vender/line/alertsAndFeedback/Warning'
+import Indicator from '@/app/components/header/indicator'
 import ModelAuthDropdown from './model-auth-dropdown'
 import SystemQuotaCard from './system-quota-card'
 import { useChangeProviderPriority } from './use-change-provider-priority'
@@ -38,7 +38,7 @@ const CredentialPanel = ({
       <SystemQuotaCard.Label className={needsGap ? 'gap-1' : undefined}>
         {isTextLabel
           ? <TextLabel variant={variant} />
-          : <CredentialStatus variant={variant} credentialName={credentialName} />}
+          : <StatusLabel variant={variant} credentialName={credentialName} />}
       </SystemQuotaCard.Label>
       <SystemQuotaCard.Actions>
         <ModelAuthDropdown
@@ -78,17 +78,17 @@ function TextLabel({ variant }: { variant: CardVariant }) {
   )
 }
 
-function CredentialStatus({ variant, credentialName }: {
+function StatusLabel({ variant, credentialName }: {
   variant: CardVariant
   credentialName: string | undefined
 }) {
   const isDestructive = isDestructiveVariant(variant)
-  const dotColor = isDestructive ? 'error' : 'success'
+  const dotColor = isDestructive ? 'red' : 'green'
   const showWarning = variant === 'api-fallback'
 
   return (
     <>
-      <StatusDot className="shrink-0" status={dotColor} />
+      <Indicator className="shrink-0" color={dotColor} />
       <span
         className={`truncate ${isDestructive ? 'text-text-destructive' : 'text-text-secondary'}`}
         title={credentialName}

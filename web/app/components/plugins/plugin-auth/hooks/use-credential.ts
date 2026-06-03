@@ -16,21 +16,9 @@ import {
 import { useInvalidToolsByType } from '@/service/use-tools'
 import { useGetApi } from './use-get-api'
 
-export const useGetPluginCredentialInfoHook = (
-  pluginPayload: PluginPayload,
-  enable?: boolean,
-  includeCredentialIds?: string[],
-) => {
+export const useGetPluginCredentialInfoHook = (pluginPayload: PluginPayload, enable?: boolean) => {
   const apiMap = useGetApi(pluginPayload)
-  const ids = (includeCredentialIds ?? []).filter(Boolean)
-  let url = enable ? apiMap.getCredentialInfo : ''
-  if (url && ids.length > 0) {
-    const qs = new URLSearchParams()
-    for (const id of ids)
-      qs.append('include_credential_ids', id)
-    url = url + (url.includes('?') ? '&' : '?') + qs.toString()
-  }
-  return useGetPluginCredentialInfo(url)
+  return useGetPluginCredentialInfo(enable ? apiMap.getCredentialInfo : '')
 }
 
 export const useDeletePluginCredentialHook = (pluginPayload: PluginPayload) => {

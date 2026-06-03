@@ -4,6 +4,7 @@ import type { InputValueTypes } from '@/app/components/share/text-generation/typ
 import type { Locale } from '@/i18n-config'
 import type { AppData, ConversationItem } from '@/models/share'
 import { toast } from '@langgenius/dify-ui/toast'
+import { useLocalStorageState } from 'ahooks'
 import { noop } from 'es-toolkit/function'
 import { produce } from 'immer'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -11,7 +12,6 @@ import { useTranslation } from 'react-i18next'
 import { addFileInfos, sortAgentSorts } from '@/app/components/tools/utils'
 import { InputVarType } from '@/app/components/workflow/types'
 import { useWebAppStore } from '@/context/web-app-context'
-import { useLocalStorage } from '@/hooks/use-local-storage'
 import { changeLanguage } from '@/i18n-config/client'
 import { AppSourceType, updateFeedback } from '@/service/share'
 import { useInvalidateShareConversations, useShareChatList, useShareConversationName, useShareConversations } from '@/service/use-share'
@@ -102,7 +102,9 @@ export const useEmbeddedChatbot = (appSourceType: AppSourceType, tryAppId?: stri
     }
     setLanguageFromParams()
   }, [appInfo])
-  const [conversationIdInfo, setConversationIdInfo] = useLocalStorage<Record<string, Record<string, string>>>(CONVERSATION_ID_INFO, {})
+  const [conversationIdInfo, setConversationIdInfo] = useLocalStorageState<Record<string, Record<string, string>>>(CONVERSATION_ID_INFO, {
+    defaultValue: {},
+  })
   const removeConversationIdInfo = useCallback((appId: string) => {
     setConversationIdInfo((prev) => {
       const newInfo = { ...prev }

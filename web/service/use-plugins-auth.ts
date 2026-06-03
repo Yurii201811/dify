@@ -52,8 +52,6 @@ export const useAddPluginCredential = (
       credentials: Record<string, any>
       type: CredentialTypeEnum
       name?: string
-      visibility?: string
-      partial_member_list?: Array<{ user_id: string }>
     }) => {
       return post(url, { body: params })
     },
@@ -68,8 +66,6 @@ export const useUpdatePluginCredential = (
       credential_id: string
       credentials?: Record<string, any>
       name?: string
-      visibility?: string
-      partial_member_list?: Array<{ user_id: string }>
     }) => {
       return post(url, { body: params })
     },

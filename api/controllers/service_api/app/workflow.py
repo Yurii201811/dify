@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Literal, override
+from typing import Literal
 
 from dateutil.parser import isoparse
 from flask import request
@@ -76,13 +76,11 @@ def _enum_value(value):
 
 
 class WorkflowRunStatusField(fields.Raw):
-    @override
     def output(self, key, obj: WorkflowRun, **kwargs):
         return _enum_value(obj.status)
 
 
 class WorkflowRunOutputsField(fields.Raw):
-    @override
     def output(self, key, obj: WorkflowRun, **kwargs):
         status = _enum_value(obj.status)
         if status == WorkflowExecutionStatus.PAUSED.value:

@@ -93,8 +93,3 @@ export const zFeatureModel = z.object({
  * Success
  */
 export const zGetFeaturesResponse = zFeatureModel
-
-/**
- * Success
- */
-export const zGetFeaturesVectorSpaceResponse = zLimitationModel

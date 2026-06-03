@@ -1,17 +1,15 @@
-import type { KbdColor } from '@langgenius/dify-ui/kbd'
 import type { FormatDisplayOptions, RegisterableHotkey } from '@tanstack/react-hotkeys'
-import type { WorkflowCanvasShortcutId } from './definitions'
+import type { WorkflowShortcutId } from './definitions'
 import { cn } from '@langgenius/dify-ui/cn'
-import { Kbd, KbdGroup } from '@langgenius/dify-ui/kbd'
 import { formatForDisplay } from '@tanstack/react-hotkeys'
-import { getWorkflowCanvasShortcutDisplayHotkey } from './definitions'
+import { getWorkflowShortcutDisplayHotkey } from './definitions'
 
 type ShortcutKbdProps = {
-  shortcut?: WorkflowCanvasShortcutId
+  shortcut?: WorkflowShortcutId
   hotkey?: RegisterableHotkey | (string & {})
   className?: string
   textColor?: 'default' | 'secondary'
-  bgColor?: KbdColor
+  bgColor?: 'gray' | 'white'
   platform?: FormatDisplayOptions['platform']
 }
 
@@ -38,7 +36,7 @@ export const ShortcutKbd = ({
   bgColor = 'gray',
   platform,
 }: ShortcutKbdProps) => {
-  const displayHotkey = hotkey ?? (shortcut ? getWorkflowCanvasShortcutDisplayHotkey(shortcut) : undefined)
+  const displayHotkey = hotkey ?? (shortcut ? getWorkflowShortcutDisplayHotkey(shortcut) : undefined)
 
   if (!displayHotkey)
     return null
@@ -46,22 +44,27 @@ export const ShortcutKbd = ({
   const displayKeys = getDisplayKeys(displayHotkey, platform)
 
   return (
-    <KbdGroup
+    <span
       className={cn(
+        'flex items-center gap-0.5',
         className,
       )}
     >
       {
-        displayKeys.map(key => (
-          <Kbd
-            key={key}
-            color={bgColor}
-            className={cn(textColor === 'secondary' && 'text-text-tertiary')}
+        displayKeys.map((key, index) => (
+          <kbd
+            key={`${key}-${index}`}
+            className={cn(
+              'flex h-4 min-w-4 items-center justify-center rounded-sm px-1 font-sans system-kbd capitalize not-italic',
+              bgColor === 'gray' && 'bg-components-kbd-bg-gray',
+              bgColor === 'white' && 'bg-components-kbd-bg-white text-text-primary-on-surface',
+              textColor === 'secondary' && 'text-text-tertiary',
+            )}
           >
             {key}
-          </Kbd>
+          </kbd>
         ))
       }
-    </KbdGroup>
+    </span>
   )
 }

@@ -18,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@langgenius/dify-ui/popover'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { toast } from '@langgenius/dify-ui/toast'
 import {
   memo,
@@ -27,6 +26,7 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import Indicator from '@/app/components/header/indicator'
 import Authorize from '../authorize'
 import ApiKeyModal from '../authorize/api-key-modal'
 import {
@@ -142,13 +142,6 @@ const Authorized = ({
     if (!open)
       pendingOperationCredentialIdRef.current = null
   }, [])
-  // Lifted state for the "+ Add API Key" modal so it isn't unmounted when the
-  // popover closes due to outside-click detection on the modal's portal.
-  const [isAddApiKeyOpen, setIsAddApiKeyOpen] = useState(false)
-  const handleAddApiKeyClick = useCallback(() => {
-    setMergedIsOpen(false)
-    setIsAddApiKeyOpen(true)
-  }, [setMergedIsOpen])
   const handleRemove = useCallback(() => {
     setDeleteCredentialId(pendingOperationCredentialIdRef.current)
   }, [])
@@ -211,7 +204,7 @@ const Authorized = ({
                           mergedIsOpen && 'bg-components-button-secondary-bg-hover',
                         )}
                       >
-                        <StatusDot className="mr-2" status={unavailableCredential ? 'disabled' : 'success'} />
+                        <Indicator className="mr-2" color={unavailableCredential ? 'gray' : 'green'} />
                         {credentials.length}
 &nbsp;
                         {
@@ -341,7 +334,6 @@ const Authorized = ({
                       canApiKey={canApiKey}
                       disabled={disabled}
                       onUpdate={onUpdate}
-                      onApiKeyClick={handleAddApiKeyClick}
                     />
                   </div>
                 </>
@@ -374,18 +366,6 @@ const Authorized = ({
             editValues={editValues}
             onClose={() => handleApiKeyModalOpenChange(false)}
             onRemove={handleRemove}
-            disabled={disabled || doingAction}
-            onUpdate={onUpdate}
-          />
-        )
-      }
-      {
-        isAddApiKeyOpen && (
-          <ApiKeyModal
-            open={isAddApiKeyOpen}
-            onOpenChange={setIsAddApiKeyOpen}
-            pluginPayload={pluginPayload}
-            onClose={() => setIsAddApiKeyOpen(false)}
             disabled={disabled || doingAction}
             onUpdate={onUpdate}
           />

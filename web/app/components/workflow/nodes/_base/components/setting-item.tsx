@@ -1,9 +1,8 @@
-import type { StatusDotStatus } from '@langgenius/dify-ui/status-dot'
-import type { PropsWithChildren, ReactNode } from 'react'
+import type { ComponentProps, PropsWithChildren, ReactNode } from 'react'
 import { cn } from '@langgenius/dify-ui/cn'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import { memo } from 'react'
+import Indicator from '@/app/components/header/indicator'
 
 type SettingItemProps = PropsWithChildren<{
   label: string
@@ -12,7 +11,7 @@ type SettingItemProps = PropsWithChildren<{
 }>
 
 export const SettingItem = memo(({ label, children, status, tooltip }: SettingItemProps) => {
-  const indicator: StatusDotStatus | undefined = status === 'error' ? 'error' : status === 'warning' ? 'warning' : undefined
+  const indicator: ComponentProps<typeof Indicator>['color'] = status === 'error' ? 'red' : status === 'warning' ? 'yellow' : undefined
   const needTooltip = ['error', 'warning'].includes(status as any)
   return (
     <div className="relative flex items-center justify-between space-x-1 rounded-md bg-workflow-block-parma-bg px-1.5 py-1 text-xs font-normal">
@@ -32,7 +31,7 @@ export const SettingItem = memo(({ label, children, status, tooltip }: SettingIt
           {tooltip}
         </TooltipContent>
       </Tooltip>
-      {indicator && <StatusDot status={indicator} className="absolute -top-0.5 -right-0.5" />}
+      {indicator && <Indicator color={indicator} className="absolute -top-0.5 -right-0.5" />}
     </div>
   )
 })

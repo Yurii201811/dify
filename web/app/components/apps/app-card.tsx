@@ -22,7 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@langgenius/dify-ui/dropdown-menu'
-import { FieldControl, FieldLabel, FieldRoot } from '@langgenius/dify-ui/field'
 import { toast } from '@langgenius/dify-ui/toast'
 import {
   Tooltip,
@@ -31,24 +30,24 @@ import {
 } from '@langgenius/dify-ui/tooltip'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import * as React from 'react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useId, useMemo, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { AppTypeIcon } from '@/app/components/app/type-selector'
 import AppIcon from '@/app/components/base/app-icon'
+import Input from '@/app/components/base/input'
 import { UserAvatarList } from '@/app/components/base/user-avatar-list'
 import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useAppContext } from '@/context/app-context'
 import { useProviderContext } from '@/context/provider-context'
-import { systemFeaturesQueryOptions } from '@/features/system-features/client'
 import { AppCardTags } from '@/features/tag-management/components/app-card-tags'
 import { useAsyncWindowOpen } from '@/hooks/use-async-window-open'
-import { useSetLocalStorage } from '@/hooks/use-local-storage'
 import { AccessMode } from '@/models/access-control'
 import dynamic from '@/next/dynamic'
 import { useRouter } from '@/next/navigation'
 import { useGetUserCanAccessApp } from '@/service/access-control'
 import { copyApp, exportAppConfig, updateAppInfo } from '@/service/apps'
 import { fetchInstalledAppList } from '@/service/explore'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import { useDeleteAppMutation } from '@/service/use-apps'
 import { fetchWorkflowDraft } from '@/service/workflow'
 import { AppModeEnum } from '@/types/app'
@@ -210,6 +209,7 @@ const AppCardOperationsMenuContent: React.FC<AppCardOperationsMenuContentProps> 
 
 const AppCard = ({ app, onlineUsers = [], onRefresh, onOpenTagManagement = () => {} }: AppCardProps) => {
   const { t } = useTranslation()
+  const deleteAppNameInputId = useId()
   const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
   const { isCurrentWorkspaceEditor } = useAppContext()
   const { onPlanInfoChanged } = useProviderContext()
@@ -224,7 +224,6 @@ const AppCard = ({ app, onlineUsers = [], onRefresh, onOpenTagManagement = () =>
   const [isOperationsMenuOpen, setIsOperationsMenuOpen] = useState(false)
   const [secretEnvList, setSecretEnvList] = useState<EnvironmentVariable[]>([])
   const { mutateAsync: mutateDeleteApp, isPending: isDeleting } = useDeleteAppMutation()
-  const setNeedRefresh = useSetLocalStorage<string>(NEED_REFRESH_APP_LIST_KEY, { raw: true })
 
   const onConfirmDelete = useCallback(async () => {
     try {
@@ -336,7 +335,7 @@ const AppCard = ({ app, onlineUsers = [], onRefresh, onOpenTagManagement = () =>
       })
       setShowDuplicateModal(false)
       toast.success(t('newApp.appCreated', { ns: 'app' }))
-      setNeedRefresh('1')
+      localStorage.setItem(NEED_REFRESH_APP_LIST_KEY, '1')
       if (onRefresh)
         onRefresh()
       onPlanInfoChanged()
@@ -632,8 +631,8 @@ const AppCard = ({ app, onlineUsers = [], onRefresh, onOpenTagManagement = () =>
               <AlertDialogDescription className="w-full system-md-regular wrap-break-word whitespace-pre-wrap text-text-tertiary">
                 {t('deleteAppConfirmContent', { ns: 'app' })}
               </AlertDialogDescription>
-              <FieldRoot name="confirm-app-name" className="mt-2">
-                <FieldLabel className="mb-1 block py-0 system-sm-regular text-text-secondary">
+              <div className="mt-2">
+                <label htmlFor={deleteAppNameInputId} className="mb-1 block system-sm-regular text-text-secondary">
                   <Trans
                     i18nKey="deleteAppConfirmInputLabel"
                     ns="app"
@@ -642,17 +641,19 @@ const AppCard = ({ app, onlineUsers = [], onRefresh, onOpenTagManagement = () =>
                       appName: <span className="system-sm-semibold text-text-primary" translate="no" />,
                     }}
                   />
-                </FieldLabel>
-                <FieldControl
+                </label>
+                <Input
+                  id={deleteAppNameInputId}
+                  name="confirm-app-name"
                   type="text"
                   autoComplete="off"
                   spellCheck={false}
                   placeholder={t('deleteAppConfirmInputPlaceholder', { ns: 'app' })}
                   value={confirmDeleteInput}
-                  onValueChange={setConfirmDeleteInput}
+                  onChange={e => setConfirmDeleteInput(e.target.value)}
                   className="border-components-input-border-hover bg-components-input-bg-normal focus:border-components-input-border-active focus:bg-components-input-bg-active"
                 />
-              </FieldRoot>
+              </div>
             </div>
             <AlertDialogActions>
               <AlertDialogCancelButton type="button" disabled={isDeleting}>

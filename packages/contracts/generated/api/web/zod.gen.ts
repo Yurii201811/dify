@@ -364,6 +364,7 @@ export const zWebAppAuthModel = z.object({
  * SystemFeatureModel
  */
 export const zSystemFeatureModel = z.object({
+  app_dsl_version: z.string().default(''),
   branding: zBrandingModel,
   enable_change_email: z.boolean().default(true),
   enable_collaboration_mode: z.boolean().default(true),
@@ -383,6 +384,7 @@ export const zSystemFeatureModel = z.object({
   plugin_manager: zPluginManagerModel,
   sso_enforced_for_signin: z.boolean().default(false),
   sso_enforced_for_signin_protocol: z.string().default(''),
+  trial_models: z.array(z.string()).default([]),
   webapp_auth: zWebAppAuthModel,
 })
 

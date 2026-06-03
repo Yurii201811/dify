@@ -4,16 +4,11 @@ from werkzeug.exceptions import Forbidden
 
 from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
-from controllers.console.wraps import (
-    account_initialization_required,
-    setup_required,
-    with_current_tenant_id,
-    with_current_user,
-)
+from controllers.console.wraps import account_initialization_required, setup_required
 from graphon.model_runtime.entities.model_entities import ModelType
 from graphon.model_runtime.errors.validate import CredentialsValidateFailedError
-from libs.login import login_required
-from models import Account, TenantAccountRole
+from libs.login import current_account_with_tenant, login_required
+from models import TenantAccountRole
 from services.model_load_balancing_service import ModelLoadBalancingService
 
 
@@ -34,9 +29,8 @@ class LoadBalancingCredentialsValidateApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @with_current_user
-    @with_current_tenant_id
-    def post(self, current_tenant_id: str, current_user: Account, provider: str):
+    def post(self, provider: str):
+        current_user, current_tenant_id = current_account_with_tenant()
         if not TenantAccountRole.is_privileged_role(current_user.current_role):
             raise Forbidden()
 
@@ -78,9 +72,8 @@ class LoadBalancingConfigCredentialsValidateApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @with_current_user
-    @with_current_tenant_id
-    def post(self, current_tenant_id: str, current_user: Account, provider: str, config_id: str):
+    def post(self, provider: str, config_id: str):
+        current_user, current_tenant_id = current_account_with_tenant()
         if not TenantAccountRole.is_privileged_role(current_user.current_role):
             raise Forbidden()
 

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import type { ICurrentWorkspace } from '@/models/common'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { consoleQuery } from '@/service/client'
 import CreditsExhaustedAlert from './credits-exhausted-alert'
 
 const baseWorkspace: ICurrentWorkspace = {
@@ -21,7 +20,7 @@ function createSeededQueryClient(overrides?: Partial<ICurrentWorkspace>) {
   const qc = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
   })
-  qc.setQueryData(consoleQuery.workspaces.current.post.queryKey(), { ...baseWorkspace, ...overrides })
+  qc.setQueryData(['common', 'current-workspace'], { ...baseWorkspace, ...overrides })
   return qc
 }
 

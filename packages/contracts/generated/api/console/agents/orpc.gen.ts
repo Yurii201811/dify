@@ -12,9 +12,7 @@ import {
   zGetAgentsByAgentIdVersionsByVersionIdResponse,
   zGetAgentsByAgentIdVersionsPath,
   zGetAgentsByAgentIdVersionsResponse,
-  zGetAgentsInviteOptionsQuery,
   zGetAgentsInviteOptionsResponse,
-  zGetAgentsQuery,
   zGetAgentsResponse,
   zPatchAgentsByAgentIdBody,
   zPatchAgentsByAgentIdPath,
@@ -23,23 +21,38 @@ import {
   zPostAgentsResponse,
 } from './zod.gen'
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const get = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'GET',
     operationId: 'getAgentsInviteOptions',
     path: '/agents/invite-options',
     tags: ['console'],
   })
-  .input(z.object({ query: zGetAgentsInviteOptionsQuery.optional() }))
   .output(zGetAgentsInviteOptionsResponse)
 
 export const inviteOptions = {
   get,
 }
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const get2 = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'GET',
     operationId: 'getAgentsByAgentIdVersionsByVersionId',
@@ -53,8 +66,16 @@ export const byVersionId = {
   get: get2,
 }
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const get3 = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'GET',
     operationId: 'getAgentsByAgentIdVersions',
@@ -69,20 +90,35 @@ export const versions = {
   byVersionId,
 }
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const delete_ = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'DELETE',
     operationId: 'deleteAgentsByAgentId',
     path: '/agents/{agent_id}',
-    successStatus: 204,
     tags: ['console'],
   })
   .input(z.object({ params: zDeleteAgentsByAgentIdPath }))
   .output(zDeleteAgentsByAgentIdResponse)
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const get4 = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'GET',
     operationId: 'getAgentsByAgentId',
@@ -92,8 +128,16 @@ export const get4 = oc
   .input(z.object({ params: zGetAgentsByAgentIdPath }))
   .output(zGetAgentsByAgentIdResponse)
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const patch = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'PATCH',
     operationId: 'patchAgentsByAgentId',
@@ -110,24 +154,38 @@ export const byAgentId = {
   versions,
 }
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const get5 = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'GET',
     operationId: 'getAgents',
     path: '/agents',
     tags: ['console'],
   })
-  .input(z.object({ query: zGetAgentsQuery.optional() }))
   .output(zGetAgentsResponse)
 
+/**
+ * Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.
+ *
+ * @deprecated
+ */
 export const post = oc
   .route({
+    deprecated: true,
+    description:
+      'Generated contract types may be inaccurate because backend OpenAPI annotations are incomplete. Do not migrate callers until the generated contract is accurate.',
     inputStructure: 'detailed',
     method: 'POST',
     operationId: 'postAgents',
     path: '/agents',
-    successStatus: 201,
     tags: ['console'],
   })
   .input(z.object({ body: zPostAgentsBody }))

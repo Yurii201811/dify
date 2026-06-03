@@ -1,6 +1,5 @@
 import type { App } from '@/types/app'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
@@ -13,8 +12,8 @@ import { getRedirection } from '@/utils/app-redirection'
 import { trackCreateApp } from '@/utils/create-app-tracking'
 import CreateAppModal from '../index'
 
-const hotkeyMocks = vi.hoisted(() => ({
-  handlers: new Map<string, () => void>(),
+const ahooksMocks = vi.hoisted(() => ({
+  keyPressHandlers: [] as Array<() => void>,
 }))
 
 vi.mock('ahooks', () => ({
@@ -24,21 +23,13 @@ vi.mock('ahooks', () => ({
     const flush = vi.fn()
     return { run, cancel, flush }
   },
+  useKeyPress: (_keys: unknown, handler: () => void) => {
+    ahooksMocks.keyPressHandlers.push(handler)
+  },
   useHover: () => false,
 }))
-
-vi.mock('@tanstack/react-hotkeys', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-hotkeys')>()
-  return {
-    ...actual,
-    useHotkey: (hotkey: string, handler: () => void) => {
-      hotkeyMocks.handlers.set(hotkey, handler)
-    },
-  }
-})
 vi.mock('@/next/navigation', () => ({
   useRouter: vi.fn(),
-  useParams: () => ({}),
 }))
 vi.mock('@/utils/create-app-tracking', () => ({
   trackCreateApp: vi.fn(),
@@ -62,6 +53,19 @@ vi.mock('@/app/components/billing/apps-full-in-dialog', () => ({
 vi.mock('@/app/components/base/app-icon', () => ({
   default: ({ onClick }: { onClick: () => void }) => (
     <button type="button" onClick={onClick}>open-icon-picker</button>
+  ),
+}))
+vi.mock('@/app/components/base/app-icon-picker', () => ({
+  default: ({ onSelect, onClose }: { onSelect: (payload: Record<string, unknown>) => void, onClose: () => void }) => (
+    <div>
+      <button
+        type="button"
+        onClick={() => onSelect({ type: 'image', fileId: 'file-1', url: 'https://example.com/icon.png' })}
+      >
+        select-image-icon
+      </button>
+      <button type="button" onClick={onClose}>close-icon-picker</button>
+    </div>
   ),
 }))
 vi.mock('@/utils/app-redirection', () => ({
@@ -120,7 +124,7 @@ describe('CreateAppModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    hotkeyMocks.handlers.clear()
+    ahooksMocks.keyPressHandlers.length = 0
     mockUseRouter.mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>)
     mockUseProviderContext.mockReturnValue({
       plan: {
@@ -212,29 +216,14 @@ describe('CreateAppModal', () => {
     expect(onCreateFromTemplate).toHaveBeenCalled()
   })
 
-  it('renders the create shortcut with kbd primitives', () => {
-    renderModal()
-
-    const createButton = screen.getByRole('button', { name: /app\.newApp\.Create/ })
-    expect(createButton.querySelectorAll('kbd')).toHaveLength(2)
-  })
-
-  it('creates a beginner chat app with the keyboard shortcut and selected icon style', async () => {
-    const user = userEvent.setup()
+  it('creates a beginner chat app with the keyboard shortcut and selected image icon', async () => {
     mockCreateApp.mockResolvedValue({ id: 'chat-app', mode: AppModeEnum.CHAT } as App)
     renderModal()
 
     fireEvent.click(screen.getByText('app.newApp.forBeginners'))
     fireEvent.click(screen.getByText('app.types.chatbot'))
-    await user.click(screen.getByText('open-icon-picker'))
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search emojis...')).toBeInTheDocument()
-    })
-    await user.click(screen.getByRole('button', { name: '#E4FBCC' }))
-    await user.click(screen.getByRole('button', { name: /iconPicker\.ok/ }))
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Search emojis...')).not.toBeInTheDocument()
-    })
+    fireEvent.click(screen.getByText('open-icon-picker'))
+    fireEvent.click(screen.getByText('select-image-icon'))
     fireEvent.change(screen.getByPlaceholderText('app.newApp.appNamePlaceholder'), {
       target: { value: 'Keyboard App' },
     })
@@ -242,15 +231,15 @@ describe('CreateAppModal', () => {
       target: { value: 'Created from shortcut' },
     })
 
-    hotkeyMocks.handlers.get('Mod+Enter')?.()
+    ahooksMocks.keyPressHandlers.at(-1)?.()
 
     await waitFor(() => {
       expect(mockCreateApp).toHaveBeenCalledWith({
         name: 'Keyboard App',
         description: 'Created from shortcut',
-        icon_type: 'emoji',
-        icon: '🤖',
-        icon_background: '#E4FBCC',
+        icon_type: 'image',
+        icon: 'file-1',
+        icon_background: undefined,
         mode: AppModeEnum.CHAT,
       })
     })
@@ -259,14 +248,13 @@ describe('CreateAppModal', () => {
   it('shows validation feedback when the keyboard shortcut runs without a name', () => {
     renderModal()
 
-    hotkeyMocks.handlers.get('Mod+Enter')?.()
+    ahooksMocks.keyPressHandlers.at(-1)?.()
 
     expect(mockToastError).toHaveBeenCalledWith('app.newApp.nameNotEmpty')
     expect(mockCreateApp).not.toHaveBeenCalled()
   })
 
-  it('ignores the keyboard shortcut when the app quota is exhausted and closes the icon picker', async () => {
-    const user = userEvent.setup()
+  it('ignores the keyboard shortcut when the app quota is exhausted and closes the icon picker', () => {
     mockUseProviderContext.mockReturnValue({
       plan: {
         type: AppModeEnum.ADVANCED_CHAT,
@@ -279,18 +267,13 @@ describe('CreateAppModal', () => {
 
     renderModal()
 
-    await user.click(screen.getByText('open-icon-picker'))
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search emojis...')).toBeInTheDocument()
-    })
-    await user.click(screen.getByRole('button', { name: /iconPicker\.cancel/ }))
-    await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Search emojis...')).not.toBeInTheDocument()
-    })
+    fireEvent.click(screen.getByText('open-icon-picker'))
+    expect(screen.getByText('select-image-icon')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('close-icon-picker'))
 
-    expect(screen.queryByPlaceholderText('Search emojis...')).not.toBeInTheDocument()
+    expect(screen.queryByText('select-image-icon')).not.toBeInTheDocument()
 
-    hotkeyMocks.handlers.get('Mod+Enter')?.()
+    ahooksMocks.keyPressHandlers.at(-1)?.()
 
     expect(mockCreateApp).not.toHaveBeenCalled()
   })

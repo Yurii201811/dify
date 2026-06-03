@@ -16,10 +16,10 @@ import TracingPanel from './tracing-panel'
 const i18nPrefix = 'singleRun'
 
 type Props = {
-  readonly list: NodeTracing[][]
-  readonly onHide: () => void
-  readonly onBack: () => void
-  readonly noWrap?: boolean
+  list: NodeTracing[][]
+  onHide: () => void
+  onBack: () => void
+  noWrap?: boolean
 }
 
 const LoopResultPanel: FC<Props> = ({

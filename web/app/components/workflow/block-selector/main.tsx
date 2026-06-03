@@ -3,7 +3,9 @@ import type {
   Placement,
 } from '@floating-ui/react'
 import type {
+  FC,
   MouseEventHandler,
+  MouseEvent as ReactMouseEvent,
 } from 'react'
 import type {
   CommonNodeType,
@@ -46,8 +48,8 @@ export type NodeSelectorProps = {
   triggerStyle?: React.CSSProperties
   triggerClassName?: (open: boolean) => string
   triggerInnerClassName?: string
-  renderTriggerAsButtonRoot?: boolean
   popupClassName?: string
+  asChild?: boolean
   availableBlocksTypes?: BlockEnum[]
   disabled?: boolean
   blocks?: NodeDefault[]
@@ -61,7 +63,7 @@ export type NodeSelectorProps = {
   forceEnableStartTab?: boolean // Force enabling Start tab regardless of existing trigger/user input nodes (e.g., when changing Start node type).
   allowUserInputSelection?: boolean // Override user-input availability; default logic blocks it when triggers exist.
 }
-function NodeSelector({
+const NodeSelector: FC<NodeSelectorProps> = ({
   open: openFromProps,
   onOpenChange,
   onSelect,
@@ -70,9 +72,9 @@ function NodeSelector({
   offset = 6,
   triggerClassName,
   triggerInnerClassName,
-  renderTriggerAsButtonRoot = false,
   triggerStyle,
   popupClassName,
+  asChild,
   availableBlocksTypes,
   disabled,
   blocks = [],
@@ -85,7 +87,7 @@ function NodeSelector({
   ignoreNodeIds = [],
   forceEnableStartTab = false,
   allowUserInputSelection,
-}: NodeSelectorProps) {
+}) => {
   const { t } = useTranslation()
   const nodes = useNodes()
   const [searchText, setSearchText] = useState('')
@@ -189,19 +191,36 @@ function NodeSelector({
     </PopoverTrigger>
   )
   const triggerElement = trigger?.(open)
-  const isValidTriggerElement = React.isValidElement(triggerElement)
-  const isNativeButtonTrigger = isValidTriggerElement && triggerElement.type === 'button'
-  const shouldRenderTriggerAsButtonRoot = isValidTriggerElement && (renderTriggerAsButtonRoot || isNativeButtonTrigger)
-  const resolvedTriggerElement = shouldRenderTriggerAsButtonRoot
-    ? triggerElement
+  const shouldRenderTriggerElementAsRoot = React.isValidElement(triggerElement)
+    && (asChild || triggerElement.type === 'button')
+  const triggerElementProps = React.isValidElement(triggerElement)
+    ? (triggerElement.props as {
+        onClick?: MouseEventHandler<HTMLElement>
+      })
+    : null
+  const resolvedTriggerElement = shouldRenderTriggerElementAsRoot
+    ? React.cloneElement(
+        triggerElement as React.ReactElement<{
+          onClick?: MouseEventHandler<HTMLElement>
+        }>,
+        {
+          onClick: (e: ReactMouseEvent<HTMLElement>) => {
+            handleTrigger(e)
+            if (typeof triggerElementProps?.onClick === 'function')
+              triggerElementProps.onClick(e)
+          },
+        },
+      )
     : (
-        <div className={triggerInnerClassName}>
+        <div className={triggerInnerClassName} onClick={handleTrigger}>
           {triggerElement}
         </div>
       )
   const resolvedOffset = typeof offset === 'number' || typeof offset === 'function' ? undefined : offset
   const sideOffset = typeof offset === 'number' ? offset : (resolvedOffset?.mainAxis ?? 0)
   const alignOffset = typeof offset === 'number' ? 0 : (resolvedOffset?.crossAxis ?? 0)
+  const nativeButton = shouldRenderTriggerElementAsRoot
+    && (typeof triggerElement.type !== 'string' || triggerElement.type === 'button')
 
   return (
     <Popover
@@ -209,13 +228,7 @@ function NodeSelector({
       onOpenChange={handleOpenChange}
     >
       {trigger
-        ? (
-            <PopoverTrigger
-              nativeButton={shouldRenderTriggerAsButtonRoot}
-              onClick={handleTrigger}
-              render={resolvedTriggerElement as React.ReactElement}
-            />
-          )
+        ? <PopoverTrigger nativeButton={nativeButton} render={resolvedTriggerElement as React.ReactElement} />
         : defaultTriggerElement}
       <PopoverContent
         placement={placement}

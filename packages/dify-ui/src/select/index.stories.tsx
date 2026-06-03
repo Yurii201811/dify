@@ -4,7 +4,6 @@ import {
   Select,
   SelectContent,
   SelectGroup,
-  SelectGroupLabel,
   SelectItem,
   SelectItemIndicator,
   SelectItemText,
@@ -15,11 +14,6 @@ import {
 } from '.'
 
 const triggerWidth = 'w-64'
-
-const cityItems = [
-  { label: 'Seattle', value: 'seattle' },
-  { label: 'New York', value: 'new-york' },
-]
 
 const meta = {
   title: 'Base/Form/Select',
@@ -60,29 +54,6 @@ export const Default: Story = {
           </SelectItem>
           <SelectItem value="paris">
             <SelectItemText>Paris</SelectItemText>
-            <SelectItemIndicator />
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  ),
-}
-
-export const WithVisibleLabel: Story = {
-  render: () => (
-    <div className={triggerWidth}>
-      <Select defaultValue="seattle">
-        <SelectLabel>City</SelectLabel>
-        <SelectTrigger>
-          <SelectValue placeholder="Select a city" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="seattle">
-            <SelectItemText>Seattle</SelectItemText>
-            <SelectItemIndicator />
-          </SelectItem>
-          <SelectItem value="new-york">
-            <SelectItemText>New York</SelectItemText>
             <SelectItemIndicator />
           </SelectItem>
         </SelectContent>
@@ -152,7 +123,7 @@ export const WithGroupsAndSeparator: Story = {
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectGroupLabel>OpenAI</SelectGroupLabel>
+            <SelectLabel>OpenAI</SelectLabel>
             <SelectItem value="gpt-5">
               <SelectItemText>GPT-5</SelectItemText>
               <SelectItemIndicator />
@@ -164,7 +135,7 @@ export const WithGroupsAndSeparator: Story = {
           </SelectGroup>
           <SelectSeparator />
           <SelectGroup>
-            <SelectGroupLabel>Anthropic</SelectGroupLabel>
+            <SelectLabel>Anthropic</SelectLabel>
             <SelectItem value="claude-opus">
               <SelectItemText>Claude Opus</SelectItemText>
               <SelectItemIndicator />
@@ -176,7 +147,7 @@ export const WithGroupsAndSeparator: Story = {
           </SelectGroup>
           <SelectSeparator />
           <SelectGroup>
-            <SelectGroupLabel>Google</SelectGroupLabel>
+            <SelectLabel>Google</SelectLabel>
             <SelectItem value="gemini-25">
               <SelectItemText>Gemini 2.5</SelectItemText>
               <SelectItemIndicator />
@@ -243,7 +214,7 @@ export const Disabled: Story = {
 export const ReadOnly: Story = {
   render: () => (
     <div className={triggerWidth}>
-      <Select defaultValue="seattle" items={cityItems} readOnly>
+      <Select defaultValue="seattle" readOnly>
         <SelectTrigger aria-label="City">
           <SelectValue />
         </SelectTrigger>

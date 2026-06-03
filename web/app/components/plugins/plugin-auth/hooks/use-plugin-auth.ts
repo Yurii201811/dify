@@ -6,12 +6,8 @@ import {
   useInvalidPluginCredentialInfoHook,
 } from './use-credential'
 
-export const usePluginAuth = (
-  pluginPayload: PluginPayload,
-  enable?: boolean,
-  includeCredentialIds?: string[],
-) => {
-  const { data } = useGetPluginCredentialInfoHook(pluginPayload, enable, includeCredentialIds)
+export const usePluginAuth = (pluginPayload: PluginPayload, enable?: boolean) => {
+  const { data } = useGetPluginCredentialInfoHook(pluginPayload, enable)
   const { isCurrentWorkspaceManager } = useAppContext()
   const isAuthorized = !!data?.credentials.length
   const canOAuth = data?.supported_credential_types.includes(CredentialTypeEnum.OAUTH2)

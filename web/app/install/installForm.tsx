@@ -4,7 +4,6 @@ import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
 
 import { useStore } from '@tanstack/react-form'
-import { useQueryClient } from '@tanstack/react-query'
 import * as React from 'react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,7 +17,6 @@ import { LICENSE_LINK } from '@/constants/link'
 import useDocumentTitle from '@/hooks/use-document-title'
 import Link from '@/next/link'
 import { useRouter } from '@/next/navigation'
-import { consoleQuery } from '@/service/client'
 import { fetchInitValidateStatus, fetchSetupStatus, login, setup } from '@/service/common'
 import { encryptPassword as encodePassword } from '@/utils/encryption'
 import Loading from '../components/base/loading'
@@ -40,7 +38,6 @@ const InstallForm = () => {
   useDocumentTitle('')
   const { t, i18n } = useTranslation()
   const router = useRouter()
-  const queryClient = useQueryClient()
   const [showPassword, setShowPassword] = React.useState(false)
   const [loading, setLoading] = React.useState(true)
 
@@ -71,10 +68,9 @@ const InstallForm = () => {
         },
       })
 
-      // Store tokens and redirect if login successful
+      // Store tokens and redirect to apps if login successful
       if (loginRes.result === 'success') {
-        await queryClient.resetQueries({ queryKey: consoleQuery.account.profile.get.key() })
-        router.replace('/')
+        router.replace('/apps')
       }
       else {
         // Fallback to signin page if auto-login fails
@@ -91,6 +87,7 @@ const InstallForm = () => {
   useEffect(() => {
     fetchSetupStatus().then((res: SetupStatusResponse) => {
       if (res.step === 'finished') {
+        localStorage.setItem('setup_status', 'finished')
         router.push('/signin')
       }
       else {

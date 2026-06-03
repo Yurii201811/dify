@@ -22,7 +22,6 @@ const mockSetShowPricingModal = vi.fn()
 const mockSetShowAccountSettingModal = vi.fn()
 const mockRouterPush = vi.fn()
 const mockMutateAsync = vi.fn()
-const mockSetEducationVerifying = vi.hoisted(() => vi.fn())
 
 // ─── Context mocks ───────────────────────────────────────────────────────────
 vi.mock('@/context/provider-context', () => ({
@@ -61,9 +60,6 @@ vi.mock('@/service/use-billing', () => ({
     isFetching: false,
     refetch: vi.fn(),
   }),
-  useCurrentPlanVectorSpace: () => ({
-    data: undefined,
-  }),
 }))
 
 // ─── Navigation mocks ───────────────────────────────────────────────────────
@@ -75,10 +71,6 @@ vi.mock('@/next/navigation', () => ({
 
 vi.mock('@/hooks/use-async-window-open', () => ({
   useAsyncWindowOpen: () => vi.fn(),
-}))
-
-vi.mock('@/hooks/use-local-storage', () => ({
-  useSetLocalStorage: () => mockSetEducationVerifying,
 }))
 
 // ─── External component mocks ───────────────────────────────────────────────
@@ -211,7 +203,7 @@ describe('Education Verification Flow', () => {
       })
     })
 
-    it('should clear education verifying flag on success', async () => {
+    it('should remove education verifying flag from localStorage on success', async () => {
       mockMutateAsync.mockResolvedValue({ token: 'token-xyz' })
       setupContexts({}, { enableEducationPlan: true, isEducationAccount: false })
       const user = userEvent.setup()
@@ -221,7 +213,7 @@ describe('Education Verification Flow', () => {
       await user.click(screen.getByText(/toVerified/i))
 
       await waitFor(() => {
-        expect(mockSetEducationVerifying).toHaveBeenCalledWith(null)
+        expect(localStorage.removeItem).toHaveBeenCalledWith('educationVerifying')
       })
     })
   })

@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Any, cast, override
+from typing import Any, cast
 
 from core.app.apps.base_app_generate_response_converter import AppGenerateResponseConverter
 from core.app.entities.task_entities import (
@@ -18,7 +18,6 @@ class WorkflowAppGenerateResponseConverter(
     AppGenerateResponseConverter[WorkflowAppBlockingResponse | WorkflowAppPausedBlockingResponse]
 ):
     @classmethod
-    @override
     def convert_blocking_full_response(
         cls, blocking_response: WorkflowAppBlockingResponse | WorkflowAppPausedBlockingResponse
     ) -> dict[str, Any]:
@@ -30,7 +29,6 @@ class WorkflowAppGenerateResponseConverter(
         return dict(blocking_response.model_dump())
 
     @classmethod
-    @override
     def convert_blocking_simple_response(
         cls, blocking_response: WorkflowAppBlockingResponse | WorkflowAppPausedBlockingResponse
     ) -> dict[str, Any]:
@@ -42,7 +40,6 @@ class WorkflowAppGenerateResponseConverter(
         return cls.convert_blocking_full_response(blocking_response)
 
     @classmethod
-    @override
     def convert_stream_full_response(
         cls, stream_response: Generator[AppStreamResponse, None, None]
     ) -> Generator[dict[str, Any] | str, None, None]:
@@ -76,7 +73,6 @@ class WorkflowAppGenerateResponseConverter(
             yield response_chunk
 
     @classmethod
-    @override
     def convert_stream_simple_response(
         cls, stream_response: Generator[AppStreamResponse, None, None]
     ) -> Generator[dict[str, Any] | str, None, None]:

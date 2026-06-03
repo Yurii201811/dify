@@ -143,6 +143,10 @@ vi.mock('@/app/components/header/account-setting/model-provider-page/declaration
   ConfigurationMethodEnum: { predefinedModel: 'predefined-model' },
 }))
 
+vi.mock('@/app/components/header/indicator', () => ({
+  default: ({ color }: { color: string }) => <span data-testid={`indicator-${color}`} />,
+}))
+
 vi.mock('@/app/components/plugins/card/base/card-icon', () => ({
   default: ({ src }: { src: string }) => <div data-testid="card-icon" data-src={typeof src === 'string' ? src : 'emoji'} />,
 }))
@@ -278,7 +282,7 @@ describe('Tool Provider Detail Flow Integration', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Authorized')).toBeInTheDocument()
-        expect(document.querySelector('.shadow-status-indicator-green-shadow')).toBeInTheDocument()
+        expect(screen.getByTestId('indicator-green')).toBeInTheDocument()
       })
     })
 

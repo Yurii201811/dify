@@ -16,7 +16,7 @@ import {
   useReactFlow,
   useViewport,
 } from 'reactflow'
-import { systemFeaturesQueryOptions } from '@/features/system-features/client'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import {
   useNodesSyncDraft,
   useWorkflowReadOnly,

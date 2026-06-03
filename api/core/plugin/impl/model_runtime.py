@@ -3,7 +3,8 @@ from __future__ import annotations
 import hashlib
 import logging
 from collections.abc import Generator, Iterable, Sequence
-from typing import IO, Any, Literal, cast, overload, override
+from threading import Lock
+from typing import IO, Any, Literal, cast, overload
 
 from pydantic import ValidationError
 from redis import RedisError
@@ -12,9 +13,9 @@ from configs import dify_config
 from core.llm_generator.output_parser.structured_output import (
     invoke_llm_with_structured_output as invoke_llm_with_structured_output_helper,
 )
+from core.plugin.entities.plugin_daemon import PluginModelProviderEntity
 from core.plugin.impl.asset import PluginAssetManager
 from core.plugin.impl.model import PluginModelClient
-from core.plugin.plugin_service import PluginService
 from extensions.ext_redis import redis_client
 from graphon.model_runtime.entities.llm_entities import (
     LLMResult,
@@ -100,38 +101,35 @@ class _PluginStructuredOutputModelInstance:
 
 
 class PluginModelRuntime(ModelRuntime):
-    """Plugin-backed runtime adapter bound to tenant context and optional caller scope.
-
-    Provider discovery goes through ``PluginService`` so the plugin lifecycle
-    methods and provider reads share one tenant-scoped cache owner.
-    """
+    """Plugin-backed runtime adapter bound to tenant context and optional caller scope."""
 
     tenant_id: str
     user_id: str | None
     client: PluginModelClient
-    _plugin_service: type[PluginService]
+    _provider_entities: tuple[ProviderEntity, ...] | None
+    _provider_entities_lock: Lock
 
-    def __init__(
-        self,
-        tenant_id: str,
-        user_id: str | None,
-        client: PluginModelClient,
-        plugin_service: type[PluginService],
-    ) -> None:
+    def __init__(self, tenant_id: str, user_id: str | None, client: PluginModelClient) -> None:
         if client is None:
             raise ValueError("client is required.")
-        if plugin_service is None:
-            raise ValueError("plugin_service is required.")
         self.tenant_id = tenant_id
         self.user_id = user_id
         self.client = client
-        self._plugin_service = plugin_service
+        self._provider_entities = None
+        self._provider_entities_lock = Lock()
 
-    @override
     def fetch_model_providers(self) -> Sequence[ProviderEntity]:
-        return self._plugin_service.fetch_plugin_model_providers(tenant_id=self.tenant_id, client=self.client)
+        if self._provider_entities is not None:
+            return self._provider_entities
 
-    @override
+        with self._provider_entities_lock:
+            if self._provider_entities is None:
+                self._provider_entities = tuple(
+                    self._to_provider_entity(provider) for provider in self.client.fetch_model_providers(self.tenant_id)
+                )
+
+        return self._provider_entities
+
     def get_provider_icon(self, *, provider: str, icon_type: str, lang: str) -> tuple[bytes, str]:
         provider_schema = self._get_provider_schema(provider)
 
@@ -174,7 +172,6 @@ class PluginModelRuntime(ModelRuntime):
         mime_type = image_mime_types.get(extension, "image/png")
         return PluginAssetManager().fetch_asset(tenant_id=self.tenant_id, id=file_name), mime_type
 
-    @override
     def validate_provider_credentials(self, *, provider: str, credentials: dict[str, Any]) -> None:
         plugin_id, provider_name = self._split_provider(provider)
         self.client.validate_provider_credentials(
@@ -185,7 +182,6 @@ class PluginModelRuntime(ModelRuntime):
             credentials=credentials,
         )
 
-    @override
     def validate_model_credentials(
         self,
         *,
@@ -205,7 +201,6 @@ class PluginModelRuntime(ModelRuntime):
             credentials=credentials,
         )
 
-    @override
     def get_model_schema(
         self,
         *,
@@ -299,7 +294,6 @@ class PluginModelRuntime(ModelRuntime):
         stream: Literal[True],
     ) -> Generator[LLMResultChunk, None, None]: ...
 
-    @override
     def invoke_llm(
         self,
         *,
@@ -363,7 +357,6 @@ class PluginModelRuntime(ModelRuntime):
         stream: Literal[True],
     ) -> Generator[LLMResultChunkWithStructuredOutput, None, None]: ...
 
-    @override
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -403,7 +396,6 @@ class PluginModelRuntime(ModelRuntime):
             stream=stream,
         )
 
-    @override
     def get_llm_num_tokens(
         self,
         *,
@@ -430,7 +422,6 @@ class PluginModelRuntime(ModelRuntime):
             tools=list(tools) if tools else None,
         )
 
-    @override
     def invoke_text_embedding(
         self,
         *,
@@ -452,7 +443,6 @@ class PluginModelRuntime(ModelRuntime):
             input_type=input_type,
         )
 
-    @override
     def invoke_multimodal_embedding(
         self,
         *,
@@ -474,7 +464,6 @@ class PluginModelRuntime(ModelRuntime):
             input_type=input_type,
         )
 
-    @override
     def get_text_embedding_num_tokens(
         self,
         *,
@@ -494,7 +483,6 @@ class PluginModelRuntime(ModelRuntime):
             texts=texts,
         )
 
-    @override
     def invoke_rerank(
         self,
         *,
@@ -520,7 +508,6 @@ class PluginModelRuntime(ModelRuntime):
             top_n=top_n,
         )
 
-    @override
     def invoke_multimodal_rerank(
         self,
         *,
@@ -546,7 +533,6 @@ class PluginModelRuntime(ModelRuntime):
             top_n=top_n,
         )
 
-    @override
     def invoke_tts(
         self,
         *,
@@ -568,7 +554,6 @@ class PluginModelRuntime(ModelRuntime):
             voice=voice,
         )
 
-    @override
     def get_tts_model_voices(
         self,
         *,
@@ -588,7 +573,6 @@ class PluginModelRuntime(ModelRuntime):
             language=language,
         )
 
-    @override
     def invoke_speech_to_text(
         self,
         *,
@@ -608,7 +592,6 @@ class PluginModelRuntime(ModelRuntime):
             file=file,
         )
 
-    @override
     def invoke_moderation(
         self,
         *,
@@ -627,6 +610,34 @@ class PluginModelRuntime(ModelRuntime):
             credentials=credentials,
             text=text,
         )
+
+    def _get_provider_short_name_alias(self, provider: PluginModelProviderEntity) -> str:
+        """
+        Expose a bare provider alias only for the canonical provider mapping.
+
+        Multiple plugins can publish the same short provider slug. If every
+        provider entity keeps that slug in ``provider_name``, callers that still
+        resolve by short name become order-dependent. Restrict the alias to the
+        provider selected by ``ModelProviderID`` so legacy short-name lookups
+        remain deterministic while the runtime surface stays canonical.
+        """
+        try:
+            canonical_provider_id = ModelProviderID(provider.provider)
+        except ValueError:
+            return ""
+
+        if canonical_provider_id.plugin_id != provider.plugin_id:
+            return ""
+        if canonical_provider_id.provider_name != provider.provider:
+            return ""
+
+        return provider.provider
+
+    def _to_provider_entity(self, provider: PluginModelProviderEntity) -> ProviderEntity:
+        declaration = provider.declaration.model_copy(deep=True)
+        declaration.provider = f"{provider.plugin_id}/{provider.provider}"
+        declaration.provider_name = self._get_provider_short_name_alias(provider)
+        return declaration
 
     def _get_provider_schema(self, provider: str) -> ProviderEntity:
         providers = self.fetch_model_providers()

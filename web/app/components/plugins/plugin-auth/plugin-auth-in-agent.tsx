@@ -1,11 +1,9 @@
-import type { StatusDotStatus } from '@langgenius/dify-ui/status-dot'
 import type {
   Credential,
   PluginPayload,
 } from './types'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { RiArrowDownSLine } from '@remixicon/react'
 import {
   memo,
@@ -13,6 +11,7 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import Indicator from '@/app/components/header/indicator'
 import Authorize from './authorize'
 import Authorized from './authorized'
 import { usePluginAuth } from './hooks/use-plugin-auth'
@@ -37,7 +36,7 @@ const PluginAuthInAgent = ({
     disabled,
     invalidPluginCredentialInfo,
     notAllowCustomCredential,
-  } = usePluginAuth(pluginPayload, true, credentialId ? [credentialId] : undefined)
+  } = usePluginAuth(pluginPayload, true)
 
   const extraAuthorizationItems: Credential[] = [
     {
@@ -61,7 +60,7 @@ const PluginAuthInAgent = ({
     let label = ''
     let removed = false
     let unavailable = false
-    let color: StatusDotStatus = 'success'
+    let color = 'green'
     if (!credentialId) {
       label = t('auth.workspaceDefault', { ns: 'plugin' })
     }
@@ -71,9 +70,9 @@ const PluginAuthInAgent = ({
       removed = !credential
       unavailable = !!credential?.not_allowed_to_use && !credential?.from_enterprise
       if (removed)
-        color = 'error'
+        color = 'red'
       else if (unavailable)
-        color = 'disabled'
+        color = 'gray'
     }
     return (
       <Button
@@ -83,9 +82,9 @@ const PluginAuthInAgent = ({
           removed && 'text-text-destructive',
         )}
       >
-        <StatusDot
+        <Indicator
           className="mr-2"
-          status={color}
+          color={color as any}
         />
         {label}
         {

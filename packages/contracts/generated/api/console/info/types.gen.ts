@@ -6,7 +6,9 @@ export type ClientOptions = {
 
 export type TenantInfoResponse = {
   created_at?: number | null
-  custom_config?: WorkspaceCustomConfigResponse
+  custom_config?: {
+    [key: string]: unknown
+  } | null
   id: string
   in_trial?: boolean | null
   name?: string | null
@@ -17,11 +19,6 @@ export type TenantInfoResponse = {
   trial_credits?: number | null
   trial_credits_used?: number | null
   trial_end_reason?: string | null
-}
-
-export type WorkspaceCustomConfigResponse = {
-  remove_webapp_brand?: boolean | null
-  replace_webapp_logo?: string | null
 }
 
 export type PostInfoData = {

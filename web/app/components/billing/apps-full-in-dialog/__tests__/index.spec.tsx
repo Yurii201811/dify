@@ -1,9 +1,8 @@
-import type { GetAccountProfileResponse } from '@dify/contracts/api/console/account/types.gen'
 import type { Mock } from 'vitest'
 import type { UsagePlanInfo } from '@/app/components/billing/type'
 import type { AppContextValue } from '@/context/app-context'
 import type { ProviderContextState } from '@/context/provider-context'
-import type { ICurrentWorkspace, LangGeniusVersionResponse } from '@/models/common'
+import type { ICurrentWorkspace, LangGeniusVersionResponse, UserProfileResponse } from '@/models/common'
 import { render, screen } from '@testing-library/react'
 import { Plan } from '@/app/components/billing/type'
 import { mailToSupport } from '@/app/components/header/utils/util'
@@ -60,7 +59,7 @@ const buildProviderContext = (overrides: Partial<ProviderContextState> = {}): Pr
 })
 
 const buildAppContext = (overrides: Partial<AppContextValue> = {}): AppContextValue => {
-  const userProfile: GetAccountProfileResponse = {
+  const userProfile: UserProfileResponse = {
     id: 'user-id',
     name: 'Test User',
     email: 'user@example.com',

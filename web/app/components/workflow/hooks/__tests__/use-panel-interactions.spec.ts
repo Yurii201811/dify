@@ -36,10 +36,12 @@ describe('usePanelInteractions', () => {
     container.remove()
   })
 
-  it('handlePaneContextMenu should set the panel context menu target', () => {
+  it('handlePaneContextMenu should set panelMenu with viewport coordinates', () => {
     const { result, store } = renderWorkflowHook(() => usePanelInteractions(), {
       initialStoreState: {
-        contextMenuTarget: { type: 'node', nodeId: 'n1' },
+        nodeMenu: { clientX: 40, clientY: 20, nodeId: 'n1' },
+        selectionMenu: { clientX: 30, clientY: 50 },
+        edgeMenu: { clientX: 320, clientY: 180, edgeId: 'e1' },
       },
     })
     const preventDefault = vi.fn()
@@ -51,7 +53,13 @@ describe('usePanelInteractions', () => {
     } as unknown as React.MouseEvent)
 
     expect(preventDefault).toHaveBeenCalled()
-    expect(store.getState().contextMenuTarget).toEqual({ type: 'panel' })
+    expect(store.getState().panelMenu).toEqual({
+      clientX: 350,
+      clientY: 250,
+    })
+    expect(store.getState().nodeMenu).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
   })
 
   it('handlePaneContextMenu should sync clipboard from navigator clipboard', async () => {
@@ -82,13 +90,33 @@ describe('usePanelInteractions', () => {
     })
   })
 
-  it('handlePaneContextmenuCancel should clear the context menu target', () => {
+  it('handlePaneContextmenuCancel should clear panelMenu', () => {
     const { result, store } = renderWorkflowHook(() => usePanelInteractions(), {
-      initialStoreState: { contextMenuTarget: { type: 'panel' } },
+      initialStoreState: { panelMenu: { clientX: 20, clientY: 10 } },
     })
 
     result.current.handlePaneContextmenuCancel()
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().panelMenu).toBeUndefined()
+  })
+
+  it('handleNodeContextmenuCancel should clear nodeMenu', () => {
+    const { result, store } = renderWorkflowHook(() => usePanelInteractions(), {
+      initialStoreState: { nodeMenu: { clientX: 20, clientY: 10, nodeId: 'n1' } },
+    })
+
+    result.current.handleNodeContextmenuCancel()
+
+    expect(store.getState().nodeMenu).toBeUndefined()
+  })
+
+  it('handleEdgeContextmenuCancel should clear edgeMenu', () => {
+    const { result, store } = renderWorkflowHook(() => usePanelInteractions(), {
+      initialStoreState: { edgeMenu: { clientX: 300, clientY: 200, edgeId: 'e1' } },
+    })
+
+    result.current.handleEdgeContextmenuCancel()
+
+    expect(store.getState().edgeMenu).toBeUndefined()
   })
 })

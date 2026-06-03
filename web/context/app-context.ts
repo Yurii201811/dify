@@ -1,12 +1,11 @@
 'use client'
 
-import type { GetAccountProfileResponse } from '@dify/contracts/api/console/account/types.gen'
-import type { ICurrentWorkspace, LangGeniusVersionResponse } from '@/models/common'
+import type { ICurrentWorkspace, LangGeniusVersionResponse, UserProfileResponse } from '@/models/common'
 import { noop } from 'es-toolkit/function'
 import { createContext, useContext, useContextSelector } from 'use-context-selector'
 
 export type AppContextValue = {
-  userProfile: GetAccountProfileResponse
+  userProfile: UserProfileResponse
   mutateUserProfile: VoidFunction
   currentWorkspace: ICurrentWorkspace
   isCurrentWorkspaceManager: boolean

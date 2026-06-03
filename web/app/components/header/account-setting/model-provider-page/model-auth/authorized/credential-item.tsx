@@ -1,6 +1,5 @@
 import type { Credential } from '../../declarations'
 import { cn } from '@langgenius/dify-ui/cn'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import {
   memo,
@@ -9,6 +8,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import ActionButton from '@/app/components/base/action-button'
 import Badge from '@/app/components/base/badge'
+import Indicator from '@/app/components/header/indicator'
 
 type CredentialItemProps = {
   credential: Credential
@@ -71,7 +71,7 @@ const CredentialItem = ({
             </div>
           )
         }
-        <StatusDot className="mr-1.5 ml-2 shrink-0" />
+        <Indicator className="mr-1.5 ml-2 shrink-0" />
         <div
           className="truncate system-md-regular text-text-secondary"
           title={credential.credential_name}

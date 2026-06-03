@@ -1,32 +1,11 @@
 import type { CreateAppModalProps } from '../index'
 import type { UsagePlanInfo } from '@/app/components/billing/type'
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
 import { createMockPlan, createMockPlanTotal, createMockPlanUsage } from '@/__mocks__/provider-context'
 import { Plan } from '@/app/components/billing/type'
 import { AppModeEnum } from '@/types/app'
 import CreateAppModal from '../index'
-
-const hotkeyMocks = vi.hoisted(() => ({
-  handlers: new Map<string, { handler: () => void, options?: { enabled?: boolean } }>(),
-}))
-
-vi.mock('@tanstack/react-hotkeys', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-hotkeys')>()
-  return {
-    ...actual,
-    useHotkey: (hotkey: string, handler: () => void, options?: { enabled?: boolean }) => {
-      hotkeyMocks.handlers.set(hotkey, { handler, options })
-    },
-  }
-})
-
-const triggerHotkey = (hotkey: string) => {
-  const registration = hotkeyMocks.handlers.get(hotkey)
-  if (registration?.options?.enabled === false)
-    return
-  registration?.handler()
-}
 
 vi.mock('emoji-mart', () => ({
   init: vi.fn(),
@@ -107,17 +86,11 @@ const setup = async (overrides: Partial<CreateAppModalProps> = {}) => {
 
 const getAppIconTrigger = (): HTMLElement => {
   const nameInput = screen.getByPlaceholderText('app.newApp.appNamePlaceholder')
-  const iconRow = nameInput.parentElement
+  const iconRow = nameInput.parentElement?.parentElement
   const iconTrigger = iconRow?.firstElementChild
   if (!(iconTrigger instanceof HTMLElement))
     throw new Error('Failed to locate app icon trigger')
   return iconTrigger
-}
-
-const openAppIconPicker = () => {
-  fireEvent.click(getAppIconTrigger())
-
-  return screen.getByRole('dialog', { name: 'app.iconPicker.emoji' })
 }
 
 describe('CreateAppModal', () => {
@@ -127,7 +100,6 @@ describe('CreateAppModal', () => {
     mockPlanType = Plan.team
     mockUsagePlanInfo = createPlanInfo(1)
     mockTotalPlanInfo = createPlanInfo(10)
-    hotkeyMocks.handlers.clear()
   })
 
   describe('Rendering', () => {
@@ -137,13 +109,6 @@ describe('CreateAppModal', () => {
       expect(screen.getByText('explore.appCustomize.title:{"name":"My App"}'))!.toBeInTheDocument()
       expect(screen.getByRole('button', { name: /common\.operation\.create/ }))!.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'common.operation.cancel' }))!.toBeInTheDocument()
-    })
-
-    it('should render the submit shortcut with kbd primitives', async () => {
-      await setup()
-
-      const createButton = screen.getByRole('button', { name: /common\.operation\.create/ })
-      expect(createButton.querySelectorAll('kbd')).toHaveLength(2)
     })
 
     it('should render edit-only fields when editing a chat app', async () => {
@@ -249,10 +214,13 @@ describe('CreateAppModal', () => {
       vi.useRealTimers()
     })
 
-    it('should submit when Mod+Enter is pressed while visible', async () => {
+    it.each([
+      ['meta+enter', { metaKey: true }],
+      ['ctrl+enter', { ctrlKey: true }],
+    ])('should submit when %s is pressed while visible', async (_, modifier) => {
       const { onConfirm, onHide } = await setup()
 
-      triggerHotkey('Mod+Enter')
+      fireEvent.keyDown(window, { key: 'Enter', keyCode: 13, ...modifier })
       await act(async () => {
         vi.advanceTimersByTime(300)
       })
@@ -264,7 +232,7 @@ describe('CreateAppModal', () => {
     it('should not submit when modal is hidden', async () => {
       const { onConfirm, onHide } = await setup({ show: false })
 
-      triggerHotkey('Mod+Enter')
+      fireEvent.keyDown(window, { key: 'Enter', keyCode: 13, metaKey: true })
       await act(async () => {
         vi.advanceTimersByTime(300)
       })
@@ -281,7 +249,7 @@ describe('CreateAppModal', () => {
 
       const { onConfirm, onHide } = await setup({ isEditModal: false })
 
-      triggerHotkey('Mod+Enter')
+      fireEvent.keyDown(window, { key: 'Enter', keyCode: 13, metaKey: true })
       await act(async () => {
         vi.advanceTimersByTime(300)
       })
@@ -298,7 +266,7 @@ describe('CreateAppModal', () => {
 
       const { onConfirm, onHide } = await setup({ isEditModal: true })
 
-      triggerHotkey('Mod+Enter')
+      fireEvent.keyDown(window, { key: 'Enter', keyCode: 13, metaKey: true })
       await act(async () => {
         vi.advanceTimersByTime(300)
       })
@@ -310,7 +278,7 @@ describe('CreateAppModal', () => {
     it('should not submit when name is empty', async () => {
       const { onConfirm, onHide } = await setup({ appName: '   ' })
 
-      triggerHotkey('Mod+Enter')
+      fireEvent.keyDown(window, { key: 'Enter', keyCode: 13, metaKey: true })
       await act(async () => {
         vi.advanceTimersByTime(300)
       })
@@ -328,15 +296,13 @@ describe('CreateAppModal', () => {
         appIconUrl: 'https://example.com/icon.png',
       })
 
-      const pickerDialog = openAppIconPicker()
+      fireEvent.click(getAppIconTrigger())
 
-      expect(within(pickerDialog).getByRole('button', { name: 'app.iconPicker.cancel' }))!.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'app.iconPicker.cancel' }))!.toBeInTheDocument()
 
-      fireEvent.click(within(pickerDialog).getByRole('button', { name: 'app.iconPicker.cancel' }))
+      fireEvent.click(screen.getByRole('button', { name: 'app.iconPicker.cancel' }))
 
-      await waitFor(() => {
-        expect(screen.queryByRole('button', { name: 'app.iconPicker.cancel' })).not.toBeInTheDocument()
-      })
+      expect(screen.queryByRole('button', { name: 'app.iconPicker.cancel' })).not.toBeInTheDocument()
     })
 
     it('should update icon payload when selecting emoji and confirming', async () => {
@@ -348,11 +314,16 @@ describe('CreateAppModal', () => {
           appIconUrl: 'https://example.com/icon.png',
         })
 
-        const pickerDialog = openAppIconPicker()
+        fireEvent.click(getAppIconTrigger())
 
-        fireEvent.click(within(pickerDialog).getByRole('button', { name: '😀' }))
+        const categoryLabel = screen.getByText('people')
+        const emojiGrid = categoryLabel.nextElementSibling
+        const clickableEmojiWrapper = emojiGrid?.firstElementChild
+        if (!(clickableEmojiWrapper instanceof HTMLElement))
+          throw new Error('Failed to locate emoji wrapper')
+        fireEvent.click(clickableEmojiWrapper)
 
-        fireEvent.click(within(pickerDialog).getByRole('button', { name: 'app.iconPicker.ok' }))
+        fireEvent.click(screen.getByRole('button', { name: 'app.iconPicker.ok' }))
 
         fireEvent.click(screen.getByRole('button', { name: /common\.operation\.create/ }))
         await act(async () => {
@@ -381,10 +352,15 @@ describe('CreateAppModal', () => {
           appIconBackground: '#FFEAD5',
         })
 
-        const pickerDialog = openAppIconPicker()
+        fireEvent.click(getAppIconTrigger())
 
-        fireEvent.click(within(pickerDialog).getByRole('button', { name: '#E4FBCC' }))
-        fireEvent.click(within(pickerDialog).getByRole('button', { name: 'app.iconPicker.ok' }))
+        const colorOption = Array.from(document.querySelectorAll('[style^="background:"]'))
+          .find(element => element.getAttribute('style')?.includes('#E4FBCC'))
+        if (!(colorOption instanceof HTMLElement) || !(colorOption.parentElement instanceof HTMLElement))
+          throw new Error('Failed to locate background color option')
+
+        fireEvent.click(colorOption.parentElement)
+        fireEvent.click(screen.getByRole('button', { name: 'app.iconPicker.ok' }))
 
         fireEvent.click(screen.getByRole('button', { name: /common\.operation\.create/ }))
         await act(async () => {

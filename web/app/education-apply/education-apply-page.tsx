@@ -19,12 +19,11 @@ import { useProviderContext } from '@/context/provider-context'
 import { useWorkspacesContext } from '@/context/workspace-context'
 import { WorkspaceProvider } from '@/context/workspace-context-provider'
 import { useAsyncWindowOpen } from '@/hooks/use-async-window-open'
-import { useSetLocalStorage } from '@/hooks/use-local-storage'
 import {
   useRouter,
   useSearchParams,
 } from '@/next/navigation'
-import { consoleClient, consoleQuery } from '@/service/client'
+import { consoleClient } from '@/service/client'
 import { switchWorkspace } from '@/service/common'
 import { commonQueryKeys } from '@/service/use-common'
 import {
@@ -63,7 +62,6 @@ const EducationApplyAgeContent = () => {
   const router = useRouter()
   const openAsyncWindow = useAsyncWindowOpen()
   const queryClient = useQueryClient()
-  const setEducationVerifying = useSetLocalStorage<string>(EDUCATION_VERIFYING_LOCALSTORAGE_ITEM, { raw: true })
 
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -85,7 +83,7 @@ const EducationApplyAgeContent = () => {
       if (res.message === 'success') {
         onPlanInfoChanged()
         updateEducationStatus()
-        setEducationVerifying(null)
+        localStorage.removeItem(EDUCATION_VERIFYING_LOCALSTORAGE_ITEM)
         setHasSubmittedEducation(true)
       }
       else {
@@ -131,7 +129,7 @@ const EducationApplyAgeContent = () => {
     try {
       await switchWorkspace({ url: '/workspaces/switch', body: { tenant_id: tenantId } })
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: consoleQuery.workspaces.current.post.key() }),
+        queryClient.invalidateQueries({ queryKey: commonQueryKeys.currentWorkspace }),
         queryClient.invalidateQueries({ queryKey: commonQueryKeys.workspaces }),
       ])
       onPlanInfoChanged()

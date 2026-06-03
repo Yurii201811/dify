@@ -49,6 +49,7 @@ const InsertBlock = ({
       <BlockSelector
         open={open}
         onOpenChange={handleOpenChange}
+        asChild
         onSelect={handleInsert}
         availableBlocksTypes={availableBlocksTypes}
         triggerClassName={() => 'hover:scale-125 transition-all'}

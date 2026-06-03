@@ -4,23 +4,20 @@ import type { AppIconSelection } from '../../base/app-icon-picker'
 import { Button } from '@langgenius/dify-ui/button'
 
 import { cn } from '@langgenius/dify-ui/cn'
-import { Kbd, KbdGroup } from '@langgenius/dify-ui/kbd'
-import { Textarea } from '@langgenius/dify-ui/textarea'
 import { toast } from '@langgenius/dify-ui/toast'
 import { RiArrowRightLine, RiArrowRightSLine, RiExchange2Fill } from '@remixicon/react'
-import { formatForDisplay, useHotkey } from '@tanstack/react-hotkeys'
-import { useDebounceFn } from 'ahooks'
+import { useDebounceFn, useKeyPress } from 'ahooks'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import AppIcon from '@/app/components/base/app-icon'
 import Divider from '@/app/components/base/divider'
 import { BubbleTextMod, ChatBot, ListSparkle, Logic } from '@/app/components/base/icons/src/vender/solid/communication'
 import Input from '@/app/components/base/input'
+import Textarea from '@/app/components/base/textarea'
 import AppsFull from '@/app/components/billing/apps-full-in-dialog'
 import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useAppContext } from '@/context/app-context'
 import { useProviderContext } from '@/context/provider-context'
-import { useSetLocalStorage } from '@/hooks/use-local-storage'
 import useTheme from '@/hooks/use-theme'
 import { useRouter } from '@/next/navigation'
 import { createApp } from '@/service/apps'
@@ -29,6 +26,7 @@ import { getRedirection } from '@/utils/app-redirection'
 import { trackCreateApp } from '@/utils/create-app-tracking'
 import { basePath } from '@/utils/var'
 import AppIconPicker from '../../base/app-icon-picker'
+import ShortcutsName from '../../workflow/shortcuts-name'
 import { CreateAppDialogShell } from '../create-app-dialog-shell'
 
 type CreateAppProps = {
@@ -59,8 +57,6 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate, defaultAppMode }:
 
   const isCreatingRef = useRef(false)
 
-  const setNeedRefresh = useSetLocalStorage<string>(NEED_REFRESH_APP_LIST_KEY, { raw: true })
-
   const onCreate = useCallback(async () => {
     if (!appMode) {
       toast.error(t('newApp.appTypeRequired', { ns: 'app' }))
@@ -88,7 +84,7 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate, defaultAppMode }:
       toast.success(t('newApp.appCreated', { ns: 'app' }))
       onSuccess()
       onClose()
-      setNeedRefresh('1')
+      localStorage.setItem(NEED_REFRESH_APP_LIST_KEY, '1')
       getRedirection(isCurrentWorkspaceEditor, app, push)
     }
     catch (error) {
@@ -98,12 +94,10 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate, defaultAppMode }:
   }, [name, t, appMode, appIcon, description, onSuccess, onClose, push, isCurrentWorkspaceEditor])
 
   const { run: handleCreateApp } = useDebounceFn(onCreate, { wait: 300 })
-  useHotkey('Mod+Enter', () => {
+  useKeyPress(['meta.enter', 'ctrl.enter'], () => {
     if (isAppsFull)
       return
     handleCreateApp()
-  }, {
-    ignoreInputs: false,
   })
   return (
     <>
@@ -226,13 +220,12 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate, defaultAppMode }:
                 />
                 {showAppIconPicker && (
                   <AppIconPicker
-                    open={showAppIconPicker}
-                    initialEmoji={appIcon.type === 'emoji'
-                      ? { icon: appIcon.icon, background: appIcon.background }
-                      : undefined}
-                    onOpenChange={setShowAppIconPicker}
                     onSelect={(payload) => {
                       setAppIcon(payload)
+                      setShowAppIconPicker(false)
+                    }}
+                    onClose={() => {
+                      setShowAppIconPicker(false)
                     }}
                   />
                 )}
@@ -247,11 +240,10 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate, defaultAppMode }:
                   </span>
                 </div>
                 <Textarea
-                  aria-label={t('newApp.captionDescription', { ns: 'app' })}
                   className="resize-none"
                   placeholder={t('newApp.appDescriptionPlaceholder', { ns: 'app' }) || ''}
                   value={description}
-                  onValueChange={value => setDescription(value)}
+                  onChange={e => setDescription(e.target.value)}
                 />
               </div>
             </div>
@@ -271,11 +263,7 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate, defaultAppMode }:
                 <Button onClick={onClose}>{t('newApp.Cancel', { ns: 'app' })}</Button>
                 <Button disabled={isAppsFull || !name} className="gap-1" variant="primary" onClick={handleCreateApp}>
                   <span>{t('newApp.Create', { ns: 'app' })}</span>
-                  <KbdGroup>
-                    {['Mod', 'Enter'].map(key => (
-                      <Kbd key={key} color="white">{formatForDisplay(key)}</Kbd>
-                    ))}
-                  </KbdGroup>
+                  <ShortcutsName keys={['ctrl', '↵']} bgColor="white" />
                 </Button>
               </div>
             </div>

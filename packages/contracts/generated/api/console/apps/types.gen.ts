@@ -17,7 +17,7 @@ export type CreateAppPayload = {
   icon?: string | null
   icon_background?: string | null
   icon_type?: IconType
-  mode: 'advanced-chat' | 'agent' | 'agent-chat' | 'chat' | 'completion' | 'workflow'
+  mode: 'advanced-chat' | 'agent-chat' | 'chat' | 'completion' | 'workflow'
   name: string
 }
 
@@ -80,7 +80,6 @@ export type AppDetailWithSite = {
   access_mode?: string | null
   api_base_url?: string | null
   app_model_config?: ModelConfig
-  bound_agent_id?: string | null
   created_at?: number | null
   created_by?: string | null
   deleted_tools?: Array<DeletedTool>
@@ -168,14 +167,6 @@ export type AdvancedChatWorkflowRunPayload = {
   query?: string
 }
 
-export type AgentAppComposerResponse = {
-  active_config_snapshot: AgentConfigSnapshotSummaryResponse
-  agent: AgentComposerAgentResponse
-  agent_soul: AgentSoulConfig
-  save_options: Array<ComposerSaveStrategy>
-  variant: string
-}
-
 export type ComposerSavePayload = {
   agent_soul?: AgentSoulConfig
   binding?: ComposerBindingPayload
@@ -187,36 +178,6 @@ export type ComposerSavePayload = {
   soul_lock?: ComposerSoulLockPayload
   variant: ComposerVariant
   version_note?: string | null
-}
-
-export type AgentComposerCandidatesResponse = {
-  allowed_node_job_candidates?: AgentComposerNodeJobCandidatesResponse
-  allowed_soul_candidates?: AgentComposerSoulCandidatesResponse
-  capabilities?: ComposerCandidateCapabilities
-  variant: ComposerVariant
-}
-
-export type AgentComposerValidateResponse = {
-  errors?: Array<string>
-  result: string
-}
-
-export type AgentAppFeaturesPayload = {
-  opening_statement?: string | null
-  retriever_resource?: AgentFeatureToggleConfig
-  sensitive_word_avoidance?: AgentSensitiveWordAvoidanceFeatureConfig
-  speech_to_text?: AgentFeatureToggleConfig
-  suggested_questions?: Array<string> | null
-  suggested_questions_after_answer?: AgentSuggestedQuestionsAfterAnswerFeatureConfig
-  text_to_speech?: AgentTextToSpeechFeatureConfig
-}
-
-export type SimpleResultResponse = {
-  result: string
-}
-
-export type AgentReferencingWorkflowsResponse = {
-  data?: Array<AgentReferencingWorkflowResponse>
 }
 
 export type AnnotationReplyPayload = {
@@ -314,6 +275,10 @@ export type SuggestedQuestionsResponse = {
   data: Array<string>
 }
 
+export type SimpleResultResponse = {
+  result: string
+}
+
 export type ConversationPagination = {
   has_next: boolean
   items: Array<Conversation>
@@ -338,7 +303,7 @@ export type CompletionMessagePayload = {
   inputs: {
     [key: string]: unknown
   }
-  model_config?: {
+  model_config: {
     [key: string]: unknown
   }
   query?: string
@@ -771,28 +736,6 @@ export type HumanInputDeliveryTestPayload = {
   }
 }
 
-export type WorkflowAgentComposerResponse = {
-  active_config_snapshot?: AgentConfigSnapshotSummaryResponse
-  agent?: AgentComposerAgentResponse
-  agent_soul: AgentSoulConfig
-  app_id?: string | null
-  binding?: AgentComposerBindingResponse
-  effective_declared_outputs?: Array<DeclaredOutputConfig>
-  impact_summary?: AgentComposerImpactResponse
-  node_id?: string | null
-  node_job: WorkflowNodeJobConfig
-  save_options: Array<ComposerSaveStrategy>
-  soul_lock: AgentComposerSoulLockResponse
-  variant: string
-  workflow_id?: string | null
-}
-
-export type AgentComposerImpactResponse = {
-  bindings?: Array<AgentComposerImpactBindingResponse>
-  current_snapshot_id?: string | null
-  workflow_node_count: number
-}
-
 export type WorkflowRunNodeExecutionResponse = {
   created_at?: number | null
   created_by_account?: SimpleAccount
@@ -1018,47 +961,24 @@ export type AdvancedChatWorkflowRunForListResponse = {
   version?: string | null
 }
 
-export type AgentConfigSnapshotSummaryResponse = {
-  agent_id?: string | null
-  created_at?: string | null
-  created_by?: string | null
-  id: string
-  summary?: string | null
-  version: number
-  version_note?: string | null
-}
-
-export type AgentComposerAgentResponse = {
-  active_config_snapshot_id?: string | null
-  description: string
-  id: string
-  name: string
-  scope: AgentScope
-  status: AgentStatus
-}
-
 export type AgentSoulConfig = {
-  app_features?: AgentSoulAppFeaturesConfig
+  app_features?: {
+    [key: string]: unknown
+  }
   app_variables?: Array<AppVariableConfig>
   env?: AgentSoulEnvConfig
   human?: AgentSoulHumanConfig
   knowledge?: AgentSoulKnowledgeConfig
   memory?: AgentSoulMemoryConfig
-  misc_legacy?: AgentSoulAppFeaturesConfig
-  model?: AgentSoulModelConfig
+  misc_legacy?: {
+    [key: string]: unknown
+  }
   prompt?: AgentSoulPromptConfig
   sandbox?: AgentSoulSandboxConfig
   schema_version?: number
   skills_files?: AgentSoulSkillsFilesConfig
   tools?: AgentSoulToolsConfig
 }
-
-export type ComposerSaveStrategy
-  = | 'node_job_only'
-    | 'save_as_new_agent'
-    | 'save_as_new_version'
-    | 'save_to_current_version'
-    | 'save_to_roster'
 
 export type ComposerBindingPayload = {
   agent_id?: string | null
@@ -1068,13 +988,26 @@ export type ComposerBindingPayload = {
 
 export type WorkflowNodeJobConfig = {
   declared_outputs?: Array<DeclaredOutputConfig>
-  human_contacts?: Array<AgentHumanContactConfig>
-  metadata?: WorkflowNodeJobMetadata
+  human_contacts?: Array<{
+    [key: string]: unknown
+  }>
+  metadata?: {
+    [key: string]: unknown
+  }
   mode?: WorkflowNodeJobMode
-  previous_node_output_refs?: Array<WorkflowPreviousNodeOutputRef>
+  previous_node_output_refs?: Array<{
+    [key: string]: unknown
+  }>
   schema_version?: number
   workflow_prompt?: string
 }
+
+export type ComposerSaveStrategy
+  = | 'node_job_only'
+    | 'save_as_new_agent'
+    | 'save_as_new_version'
+    | 'save_to_current_version'
+    | 'save_to_roster'
 
 export type ComposerSoulLockPayload = {
   locked?: boolean
@@ -1082,59 +1015,6 @@ export type ComposerSoulLockPayload = {
 }
 
 export type ComposerVariant = 'agent_app' | 'workflow'
-
-export type AgentComposerNodeJobCandidatesResponse = {
-  declare_output_types?: Array<DeclaredOutputType>
-  human_contacts?: Array<AgentHumanContactConfig>
-  previous_node_outputs?: Array<WorkflowPreviousNodeOutputRef>
-}
-
-export type AgentComposerSoulCandidatesResponse = {
-  cli_tools?: Array<AgentCliToolConfig>
-  dify_tools?: Array<AgentComposerDifyToolCandidateResponse>
-  human_contacts?: Array<AgentHumanContactConfig>
-  knowledge_datasets?: Array<AgentKnowledgeDatasetConfig>
-  skills_files?: Array<AgentSkillRefConfig>
-}
-
-export type ComposerCandidateCapabilities = {
-  human_roster_available?: boolean
-}
-
-export type AgentFeatureToggleConfig = {
-  enabled?: boolean
-  [key: string]: unknown
-}
-
-export type AgentSensitiveWordAvoidanceFeatureConfig = {
-  config?: AgentModerationProviderConfig
-  enabled?: boolean
-  type?: string | null
-  [key: string]: unknown
-}
-
-export type AgentSuggestedQuestionsAfterAnswerFeatureConfig = {
-  enabled?: boolean
-  model?: AgentSoulModelConfig
-  prompt?: string | null
-  [key: string]: unknown
-}
-
-export type AgentTextToSpeechFeatureConfig = {
-  autoPlay?: string | null
-  enabled?: boolean
-  language?: string | null
-  voice?: string | null
-  [key: string]: unknown
-}
-
-export type AgentReferencingWorkflowResponse = {
-  app_id: string
-  app_mode: string
-  app_name: string
-  node_ids?: Array<string>
-  workflow_id: string
-}
 
 export type AnnotationHitHistory = {
   annotation_content?: string | null
@@ -1424,39 +1304,6 @@ export type PipelineVariableResponse = {
   variable: string
 }
 
-export type AgentComposerBindingResponse = {
-  agent_id?: string | null
-  binding_type: WorkflowAgentBindingType
-  current_snapshot_id?: string | null
-  id: string
-  node_id: string
-  workflow_id: string
-}
-
-export type DeclaredOutputConfig = {
-  array_item?: DeclaredArrayItem
-  check?: DeclaredOutputCheckConfig
-  description?: string | null
-  failure_strategy?: DeclaredOutputFailureStrategy
-  file?: DeclaredOutputFileConfig
-  id?: string | null
-  name: string
-  required?: boolean
-  type: DeclaredOutputType
-}
-
-export type AgentComposerSoulLockResponse = {
-  can_unlock?: boolean
-  locked: boolean
-  reason?: string | null
-}
-
-export type AgentComposerImpactBindingResponse = {
-  app_id: string
-  node_id: string
-  workflow_id: string
-}
-
 export type WorkflowDraftVariableWithoutValue = {
   description?: string
   edited?: boolean
@@ -1505,21 +1352,6 @@ export type WorkflowOnlineUser = {
   username: string
 }
 
-export type AgentScope = 'roster' | 'workflow_only'
-
-export type AgentStatus = 'active' | 'archived'
-
-export type AgentSoulAppFeaturesConfig = {
-  opening_statement?: string | null
-  retriever_resource?: AgentFeatureToggleConfig
-  sensitive_word_avoidance?: AgentSensitiveWordAvoidanceFeatureConfig
-  speech_to_text?: AgentFeatureToggleConfig
-  suggested_questions?: Array<string> | null
-  suggested_questions_after_answer?: AgentSuggestedQuestionsAfterAnswerFeatureConfig
-  text_to_speech?: AgentTextToSpeechFeatureConfig
-  [key: string]: unknown
-}
-
 export type AppVariableConfig = {
   default?: unknown
   name: string
@@ -1528,33 +1360,39 @@ export type AppVariableConfig = {
 }
 
 export type AgentSoulEnvConfig = {
-  secret_refs?: Array<AgentSecretRefConfig>
-  variables?: Array<AgentEnvVariableConfig>
+  secret_refs?: Array<{
+    [key: string]: unknown
+  }>
+  variables?: Array<{
+    [key: string]: unknown
+  }>
 }
 
 export type AgentSoulHumanConfig = {
-  contacts?: Array<AgentHumanContactConfig>
-  tools?: Array<AgentHumanToolConfig>
+  contacts?: Array<{
+    [key: string]: unknown
+  }>
+  tools?: Array<{
+    [key: string]: unknown
+  }>
 }
 
 export type AgentSoulKnowledgeConfig = {
-  datasets?: Array<AgentKnowledgeDatasetConfig>
-  query_config?: AgentKnowledgeQueryConfig
+  datasets?: Array<{
+    [key: string]: unknown
+  }>
+  query_config?: {
+    [key: string]: unknown
+  }
   query_mode?: AgentKnowledgeQueryMode
 }
 
 export type AgentSoulMemoryConfig = {
-  artifacts?: Array<AgentMemoryArtifactConfig>
+  artifacts?: Array<{
+    [key: string]: unknown
+  }>
   budget?: string | null
   scope?: string | null
-}
-
-export type AgentSoulModelConfig = {
-  credential_ref?: AgentSoulModelCredentialRef
-  model: string
-  model_provider: string
-  model_settings?: AgentSoulModelSettings
-  plugin_id: string
 }
 
 export type AgentSoulPromptConfig = {
@@ -1562,90 +1400,42 @@ export type AgentSoulPromptConfig = {
 }
 
 export type AgentSoulSandboxConfig = {
-  config?: AgentSandboxProviderConfig
+  config?: {
+    [key: string]: unknown
+  }
   provider?: string | null
 }
 
 export type AgentSoulSkillsFilesConfig = {
-  files?: Array<AgentFileRefConfig>
-  skills?: Array<AgentSkillRefConfig>
+  files?: Array<{
+    [key: string]: unknown
+  }>
+  skills?: Array<{
+    [key: string]: unknown
+  }>
 }
 
 export type AgentSoulToolsConfig = {
-  cli_tools?: Array<AgentCliToolConfig>
-  dify_tools?: Array<AgentSoulDifyToolConfig>
+  cli_tools?: Array<{
+    [key: string]: unknown
+  }>
+  dify_tools?: Array<{
+    [key: string]: unknown
+  }>
 }
 
-export type AgentHumanContactConfig = {
-  contact_id?: string | null
-  email?: string | null
-  human_id?: string | null
+export type DeclaredOutputConfig = {
+  checks?: Array<DeclaredOutputCheckConfig>
+  description?: string | null
+  failure_strategy?: DeclaredOutputFailureStrategy
+  file?: DeclaredOutputFileConfig
   id?: string | null
-  name?: string | null
-  [key: string]: unknown
-}
-
-export type WorkflowNodeJobMetadata = {
-  file_refs?: Array<AgentFileRefConfig> | null
-  [key: string]: unknown
+  name: string
+  required?: boolean
+  type: DeclaredOutputType
 }
 
 export type WorkflowNodeJobMode = 'let_agent_figure_it_out' | 'tell_agent_what_to_do'
-
-export type WorkflowPreviousNodeOutputRef = {
-  key?: string | null
-  name?: string | null
-  node_id?: string | null
-  output?: string | null
-  selector?: Array<unknown> | null
-  value_selector?: Array<unknown> | null
-  variable?: string | null
-  variable_selector?: Array<unknown> | null
-  [key: string]: unknown
-}
-
-export type DeclaredOutputType = 'array' | 'boolean' | 'file' | 'number' | 'object' | 'string'
-
-export type AgentCliToolConfig = {
-  command?: string | null
-  description?: string | null
-  enabled?: boolean
-  name?: string | null
-  [key: string]: unknown
-}
-
-export type AgentComposerDifyToolCandidateResponse = {
-  description?: string | null
-  id?: string | null
-  name?: string | null
-  plugin_id?: string | null
-  provider?: string | null
-  provider_id?: string | null
-}
-
-export type AgentKnowledgeDatasetConfig = {
-  description?: string | null
-  id?: string | null
-  name?: string | null
-  [key: string]: unknown
-}
-
-export type AgentSkillRefConfig = {
-  description?: string | null
-  file_id?: string | null
-  id?: string | null
-  name?: string | null
-  path?: string | null
-  [key: string]: unknown
-}
-
-export type AgentModerationProviderConfig = {
-  api_based_extension_id?: string | null
-  inputs_config?: AgentModerationIoConfig
-  keywords?: string | null
-  outputs_config?: AgentModerationIoConfig
-  [key: string]: unknown
-}
 
 export type SimpleModelConfig = {
   model_dict?: JsonValue
@@ -1715,24 +1505,20 @@ export type WorkflowRunForArchivedLogResponse = {
   triggered_from?: string | null
 }
 
-export type WorkflowAgentBindingType = 'inline_agent' | 'roster_agent'
-
-export type DeclaredArrayItem = {
-  description?: string | null
-  type: DeclaredOutputType
-}
+export type AgentKnowledgeQueryMode = 'generated_query' | 'user_query'
 
 export type DeclaredOutputCheckConfig = {
-  benchmark_file_ref?: AgentFileRefConfig
-  enabled?: boolean
-  model_ref?: AgentSoulModelConfig
+  benchmark_file_ref?: {
+    [key: string]: unknown
+  } | null
   prompt?: string | null
+  type: string
 }
 
 export type DeclaredOutputFailureStrategy = {
-  default_value?: unknown
-  on_failure?: OutputErrorStrategy
-  retry?: DeclaredOutputRetryConfig
+  max_retries?: number
+  on_output_check_failed?: string | null
+  on_type_check_failed?: string | null
 }
 
 export type DeclaredOutputFileConfig = {
@@ -1740,101 +1526,7 @@ export type DeclaredOutputFileConfig = {
   mime_types?: Array<string>
 }
 
-export type AgentSecretRefConfig = {
-  id?: string | null
-  name?: string | null
-  provider?: string | null
-  type?: string | null
-  [key: string]: unknown
-}
-
-export type AgentEnvVariableConfig = {
-  name?: string | null
-  required?: boolean
-  type?: string | null
-  value?: unknown
-  [key: string]: unknown
-}
-
-export type AgentHumanToolConfig = {
-  description?: string | null
-  enabled?: boolean
-  name?: string | null
-  [key: string]: unknown
-}
-
-export type AgentKnowledgeQueryConfig = {
-  query?: string | null
-  score_threshold?: number | null
-  score_threshold_enabled?: boolean | null
-  top_k?: number | null
-  [key: string]: unknown
-}
-
-export type AgentKnowledgeQueryMode = 'generated_query' | 'user_query'
-
-export type AgentMemoryArtifactConfig = {
-  id?: string | null
-  name?: string | null
-  type?: string | null
-  url?: string | null
-  [key: string]: unknown
-}
-
-export type AgentSoulModelCredentialRef = {
-  id?: string | null
-  provider?: string | null
-  type: string
-}
-
-export type AgentSoulModelSettings = {
-  frequency_penalty?: number | null
-  max_tokens?: number | null
-  presence_penalty?: number | null
-  response_format?: AgentModelResponseFormatConfig
-  stop?: Array<string> | null
-  temperature?: number | null
-  top_p?: number | null
-  [key: string]: unknown
-}
-
-export type AgentSandboxProviderConfig = {
-  env?: Array<AgentEnvVariableConfig>
-  image?: string | null
-  working_dir?: string | null
-  [key: string]: unknown
-}
-
-export type AgentFileRefConfig = {
-  id?: string | null
-  name?: string | null
-  transfer_method?: string | null
-  type?: string | null
-  url?: string | null
-  [key: string]: unknown
-}
-
-export type AgentSoulDifyToolConfig = {
-  credential_ref?: AgentSoulDifyToolCredentialRef
-  credential_type?: 'api-key' | 'oauth2' | 'unauthorized'
-  description?: string | null
-  enabled?: boolean
-  name?: string | null
-  plugin_id?: string | null
-  provider?: string | null
-  provider_id?: string | null
-  provider_type?: string
-  runtime_parameters?: {
-    [key: string]: unknown
-  }
-  tool_name: string
-}
-
-export type AgentModerationIoConfig = {
-  enabled?: boolean
-  preset_response?: string | null
-  [key: string]: unknown
-}
+export type DeclaredOutputType = 'array' | 'boolean' | 'file' | 'number' | 'object' | 'string'
 
 export type UserActionConfig = {
   button_style?: ButtonStyle
@@ -1843,25 +1535,6 @@ export type UserActionConfig = {
 }
 
 export type FormInputConfig = unknown
-
-export type OutputErrorStrategy = 'default_value' | 'fail_branch' | 'stop'
-
-export type DeclaredOutputRetryConfig = {
-  enabled?: boolean
-  max_retries?: number
-  retry_interval_ms?: number
-}
-
-export type AgentModelResponseFormatConfig = {
-  type?: string | null
-  [key: string]: unknown
-}
-
-export type AgentSoulDifyToolCredentialRef = {
-  id?: string | null
-  provider?: string | null
-  type?: 'provider' | 'tool'
-}
 
 export type ButtonStyle = 'accent' | 'default' | 'ghost' | 'primary'
 
@@ -1977,15 +1650,7 @@ export type GetAppsData = {
   query?: {
     is_created_by_me?: boolean | null
     limit?: number
-    mode?:
-      | 'advanced-chat'
-      | 'agent'
-      | 'agent-chat'
-      | 'all'
-      | 'channel'
-      | 'chat'
-      | 'completion'
-      | 'workflow'
+    mode?: 'advanced-chat' | 'agent-chat' | 'all' | 'channel' | 'chat' | 'completion' | 'workflow'
     name?: string | null
     page?: number
     tag_ids?: Array<string> | null
@@ -2343,7 +2008,9 @@ export type GetAppsByAppIdAgentComposerData = {
 }
 
 export type GetAppsByAppIdAgentComposerResponses = {
-  200: AgentAppComposerResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type GetAppsByAppIdAgentComposerResponse
@@ -2359,7 +2026,9 @@ export type PutAppsByAppIdAgentComposerData = {
 }
 
 export type PutAppsByAppIdAgentComposerResponses = {
-  200: AgentAppComposerResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type PutAppsByAppIdAgentComposerResponse
@@ -2375,7 +2044,9 @@ export type GetAppsByAppIdAgentComposerCandidatesData = {
 }
 
 export type GetAppsByAppIdAgentComposerCandidatesResponses = {
-  200: AgentComposerCandidatesResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type GetAppsByAppIdAgentComposerCandidatesResponse
@@ -2391,64 +2062,13 @@ export type PostAppsByAppIdAgentComposerValidateData = {
 }
 
 export type PostAppsByAppIdAgentComposerValidateResponses = {
-  200: AgentComposerValidateResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type PostAppsByAppIdAgentComposerValidateResponse
   = PostAppsByAppIdAgentComposerValidateResponses[keyof PostAppsByAppIdAgentComposerValidateResponses]
-
-export type PostAppsByAppIdAgentFeaturesData = {
-  body: AgentAppFeaturesPayload
-  path: {
-    app_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/agent-features'
-}
-
-export type PostAppsByAppIdAgentFeaturesErrors = {
-  400: {
-    [key: string]: unknown
-  }
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type PostAppsByAppIdAgentFeaturesError
-  = PostAppsByAppIdAgentFeaturesErrors[keyof PostAppsByAppIdAgentFeaturesErrors]
-
-export type PostAppsByAppIdAgentFeaturesResponses = {
-  200: SimpleResultResponse
-}
-
-export type PostAppsByAppIdAgentFeaturesResponse
-  = PostAppsByAppIdAgentFeaturesResponses[keyof PostAppsByAppIdAgentFeaturesResponses]
-
-export type GetAppsByAppIdAgentReferencingWorkflowsData = {
-  body?: never
-  path: {
-    app_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/agent-referencing-workflows'
-}
-
-export type GetAppsByAppIdAgentReferencingWorkflowsErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdAgentReferencingWorkflowsError
-  = GetAppsByAppIdAgentReferencingWorkflowsErrors[keyof GetAppsByAppIdAgentReferencingWorkflowsErrors]
-
-export type GetAppsByAppIdAgentReferencingWorkflowsResponses = {
-  200: AgentReferencingWorkflowsResponse
-}
-
-export type GetAppsByAppIdAgentReferencingWorkflowsResponse
-  = GetAppsByAppIdAgentReferencingWorkflowsResponses[keyof GetAppsByAppIdAgentReferencingWorkflowsResponses]
 
 export type GetAppsByAppIdAgentLogsData = {
   body?: never
@@ -4841,7 +4461,9 @@ export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerResponses = {
-  200: WorkflowAgentComposerResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerResponse
@@ -4858,7 +4480,9 @@ export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerData = {
 }
 
 export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerResponses = {
-  200: WorkflowAgentComposerResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerResponse
@@ -4875,14 +4499,16 @@ export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesData
 }
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesResponses = {
-  200: AgentComposerCandidatesResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesResponse
   = GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesResponses[keyof GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesResponses]
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactData = {
-  body: ComposerSavePayload
+  body?: never
   path: {
     app_id: string
     node_id: string
@@ -4892,7 +4518,9 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactData = 
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactResponses = {
-  200: AgentComposerImpactResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactResponse
@@ -4909,7 +4537,9 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterD
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterResponses = {
-  200: WorkflowAgentComposerResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterResponse
@@ -4926,7 +4556,9 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateData 
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateResponses = {
-  200: AgentComposerValidateResponse
+  200: {
+    [key: string]: unknown
+  }
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateResponse
@@ -5083,122 +4715,6 @@ export type PostAppsByAppIdWorkflowsDraftRunResponses = {
 
 export type PostAppsByAppIdWorkflowsDraftRunResponse
   = PostAppsByAppIdWorkflowsDraftRunResponses[keyof PostAppsByAppIdWorkflowsDraftRunResponses]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsData = {
-  body?: never
-  path: {
-    app_id: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/draft/runs/{run_id}/node-outputs'
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsError
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsErrors]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsResponses = {
-  200: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsResponse
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsResponses[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsResponses]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsData = {
-  body?: never
-  path: {
-    app_id: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/draft/runs/{run_id}/node-outputs/events'
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsError
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsErrors]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsResponses = {
-  200: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsResponse
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsResponses[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsResponses]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdData = {
-  body?: never
-  path: {
-    app_id: string
-    node_id: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/draft/runs/{run_id}/node-outputs/{node_id}'
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdError
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdErrors]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdResponses = {
-  200: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdResponse
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdResponses[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdResponses]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewData = {
-  body?: never
-  path: {
-    app_id: string
-    node_id: string
-    output_name: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/draft/runs/{run_id}/node-outputs/{node_id}/{output_name}/preview'
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewError
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors]
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses
-  = {
-    200: {
-      [key: string]: unknown
-    }
-  }
-
-export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponse
-  = GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses]
 
 export type GetAppsByAppIdWorkflowsDraftSystemVariablesData = {
   body?: never
@@ -5455,124 +4971,6 @@ export type PostAppsByAppIdWorkflowsPublishResponses = {
 
 export type PostAppsByAppIdWorkflowsPublishResponse
   = PostAppsByAppIdWorkflowsPublishResponses[keyof PostAppsByAppIdWorkflowsPublishResponses]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsData = {
-  body?: never
-  path: {
-    app_id: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/published/runs/{run_id}/node-outputs'
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsError
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsErrors]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsResponses = {
-  200: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsResponse
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsResponses[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsResponses]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsData = {
-  body?: never
-  path: {
-    app_id: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/published/runs/{run_id}/node-outputs/events'
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsError
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsErrors]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsResponses = {
-  200: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsResponse
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsResponses[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsResponses]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdData = {
-  body?: never
-  path: {
-    app_id: string
-    node_id: string
-    run_id: string
-  }
-  query?: never
-  url: '/apps/{app_id}/workflows/published/runs/{run_id}/node-outputs/{node_id}'
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdErrors = {
-  404: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdError
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdErrors]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdResponses = {
-  200: {
-    [key: string]: unknown
-  }
-}
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdResponse
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdResponses[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdResponses]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewData
-  = {
-    body?: never
-    path: {
-      app_id: string
-      node_id: string
-      output_name: string
-      run_id: string
-    }
-    query?: never
-    url: '/apps/{app_id}/workflows/published/runs/{run_id}/node-outputs/{node_id}/{output_name}/preview'
-  }
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors
-  = {
-    404: {
-      [key: string]: unknown
-    }
-  }
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewError
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors]
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses
-  = {
-    200: {
-      [key: string]: unknown
-    }
-  }
-
-export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponse
-  = GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses]
 
 export type GetAppsByAppIdWorkflowsTriggersWebhookData = {
   body?: never

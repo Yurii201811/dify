@@ -1,13 +1,5 @@
-"""SSRF-protected HTTP client for generic outbound requests.
-
-Use this module when the URL represents a normal external HTTP interaction that
-must go through network/proxy policy exactly as requested, such as HTTP Request
-nodes, provider/API integrations, auth discovery, or custom tool calls.
-
-Do not use this directly for "remote file" retrieval. File downloads, probes,
-and metadata checks should use `core.file.remote_fetcher` instead so Dify-signed
-file URLs can be resolved through DB + storage before falling back to this SSRF
-client.
+"""
+Proxy requests to avoid SSRF
 """
 
 import logging
@@ -51,16 +43,13 @@ request_error = httpx.RequestError
 max_retries_exceeded_error = MaxRetriesExceededError
 
 
-def _create_proxy_mounts(verify: bool) -> dict[str, httpx.HTTPTransport]:
-    """Build per-scheme proxy transports with the same TLS policy as the SSRF client."""
+def _create_proxy_mounts() -> dict[str, httpx.HTTPTransport]:
     return {
         "http://": httpx.HTTPTransport(
             proxy=dify_config.SSRF_PROXY_HTTP_URL,
-            verify=verify,
         ),
         "https://": httpx.HTTPTransport(
             proxy=dify_config.SSRF_PROXY_HTTPS_URL,
-            verify=verify,
         ),
     }
 
@@ -75,7 +64,7 @@ def _build_ssrf_client(verify: bool) -> httpx.Client:
 
     if dify_config.SSRF_PROXY_HTTP_URL and dify_config.SSRF_PROXY_HTTPS_URL:
         return httpx.Client(
-            mounts=_create_proxy_mounts(verify=verify),
+            mounts=_create_proxy_mounts(),
             verify=verify,
             limits=_SSRF_CLIENT_LIMITS,
         )

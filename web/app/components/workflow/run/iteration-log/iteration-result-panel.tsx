@@ -18,9 +18,9 @@ import { NodeRunningStatus } from '@/app/components/workflow/types'
 const i18nPrefix = 'singleRun'
 
 type Props = {
-  readonly list: NodeTracing[][]
-  readonly onBack: () => void
-  readonly iterDurationMap?: IterationDurationMap
+  list: NodeTracing[][]
+  onBack: () => void
+  iterDurationMap?: IterationDurationMap
 }
 
 const IterationResultPanel: FC<Props> = ({

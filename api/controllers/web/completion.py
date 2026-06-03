@@ -2,7 +2,7 @@ import logging
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
-from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound
 
 import services
 from controllers.common.fields import SimpleResultResponse
@@ -29,21 +29,12 @@ from core.errors.error import (
 from graphon.model_runtime.errors.invoke import InvokeError
 from libs import helper
 from libs.helper import uuid_value
-from models.model import App, AppMode, EndUser
+from models.model import AppMode
 from services.app_generate_service import AppGenerateService
 from services.app_task_service import AppTaskService
 from services.errors.llm import InvokeRateLimitError
 
 logger = logging.getLogger(__name__)
-
-
-def _resolve_agent_app_streaming(*, app_mode: AppMode, response_mode: str | None) -> bool:
-    """Agent App runtime is SSE-only until backend blocking runs are supported."""
-    if app_mode != AppMode.AGENT:
-        return response_mode == "streaming"
-    if response_mode == "blocking":
-        raise BadRequest("Agent App only supports streaming response mode.")
-    return True
 
 
 class CompletionMessagePayload(BaseModel):
@@ -95,7 +86,7 @@ class CompletionApi(WebApiResource):
             500: "Internal Server Error",
         }
     )
-    def post(self, app_model: App, end_user: EndUser):
+    def post(self, app_model, end_user):
         if app_model.mode != AppMode.COMPLETION:
             raise NotCompletionAppError()
 
@@ -149,7 +140,7 @@ class CompletionStopApi(WebApiResource):
         }
     )
     @web_ns.response(200, "Success", web_ns.models[SimpleResultResponse.__name__])
-    def post(self, app_model: App, end_user: EndUser, task_id: str):
+    def post(self, app_model, end_user, task_id):
         if app_model.mode != AppMode.COMPLETION:
             raise NotCompletionAppError()
 
@@ -178,15 +169,15 @@ class ChatApi(WebApiResource):
             500: "Internal Server Error",
         }
     )
-    def post(self, app_model: App, end_user: EndUser):
+    def post(self, app_model, end_user):
         app_mode = AppMode.value_of(app_model.mode)
-        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT, AppMode.AGENT}:
+        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()
 
         payload = ChatMessagePayload.model_validate(web_ns.payload or {})
         args = payload.model_dump(exclude_none=True)
 
-        streaming = _resolve_agent_app_streaming(app_mode=app_mode, response_mode=payload.response_mode)
+        streaming = payload.response_mode == "streaming"
         args["auto_generate_name"] = False
 
         try:
@@ -235,9 +226,9 @@ class ChatStopApi(WebApiResource):
         }
     )
     @web_ns.response(200, "Success", web_ns.models[SimpleResultResponse.__name__])
-    def post(self, app_model: App, end_user: EndUser, task_id: str):
+    def post(self, app_model, end_user, task_id):
         app_mode = AppMode.value_of(app_model.mode)
-        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT, AppMode.AGENT}:
+        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()
 
         AppTaskService.stop_task(

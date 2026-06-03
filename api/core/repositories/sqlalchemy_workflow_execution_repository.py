@@ -4,7 +4,6 @@ SQLAlchemy implementation of the WorkflowExecutionRepository.
 
 import json
 import logging
-from typing import override
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
@@ -175,7 +174,6 @@ class SQLAlchemyWorkflowExecutionRepository(WorkflowExecutionRepository):
 
         return db_model
 
-    @override
     def save(self, execution: WorkflowExecution):
         """
         Save or update a WorkflowExecution domain entity to the database.

@@ -11,7 +11,7 @@ type PreviewRunningData = WorkflowRunningData & {
   resultTabActive?: boolean
   resultText?: string
   // human input form schema or data cached when node is in 'Paused' status
-  extraContentAndFormData?: Record<string, unknown>
+  extraContentAndFormData?: Record<string, any>
 }
 
 type MousePosition = {
@@ -92,8 +92,17 @@ export const createWorkflowSlice: StateCreator<WorkflowSliceShape> = set => ({
   setSelection: selection => set(() => ({ selection })),
   bundleNodeSize: null,
   setBundleNodeSize: bundleNodeSize => set(() => ({ bundleNodeSize })),
-  controlMode: 'pointer',
-  setControlMode: controlMode => set(() => ({ controlMode })),
+  controlMode: (() => {
+    const storedControlMode = localStorage.getItem('workflow-operation-mode')
+    if (storedControlMode === 'pointer' || storedControlMode === 'hand' || storedControlMode === 'comment')
+      return storedControlMode
+
+    return 'pointer'
+  })(),
+  setControlMode: (controlMode) => {
+    set(() => ({ controlMode }))
+    localStorage.setItem('workflow-operation-mode', controlMode)
+  },
   pendingComment: null,
   setPendingComment: pendingComment => set(() => ({ pendingComment })),
   isCommentPlacing: false,

@@ -29,7 +29,7 @@ from controllers.console.wraps import (
 from enums.cloud_plan import CloudPlan
 from extensions.ext_database import db
 from fields.base import ResponseModel
-from libs.helper import TimestampField, dump_response, to_timestamp
+from libs.helper import TimestampField, to_timestamp
 from libs.login import current_account_with_tenant, login_required
 from models.account import Tenant, TenantCustomConfigDict, TenantStatus
 from services.account_service import TenantService
@@ -56,11 +56,6 @@ class WorkspaceCustomConfigPayload(BaseModel):
     replace_webapp_logo: str | None = None
 
 
-class WorkspaceCustomConfigResponse(ResponseModel):
-    remove_webapp_brand: bool | None = None
-    replace_webapp_logo: str | None = None
-
-
 class WorkspaceInfoPayload(BaseModel):
     name: str
 
@@ -74,7 +69,7 @@ class TenantInfoResponse(ResponseModel):
     role: str | None = None
     in_trial: bool | None = None
     trial_end_reason: str | None = None
-    custom_config: WorkspaceCustomConfigResponse | None = None
+    custom_config: dict | None = None
     trial_credits: int | None = None
     trial_credits_used: int | None = None
     next_credit_reset_date: int | None = None
@@ -106,13 +101,9 @@ register_schema_models(
     SwitchWorkspacePayload,
     WorkspaceCustomConfigPayload,
     WorkspaceInfoPayload,
-)
-register_response_schema_models(
-    console_ns,
     TenantInfoResponse,
-    WorkspaceCustomConfigResponse,
-    WorkspacePermissionResponse,
 )
+register_response_schema_models(console_ns, WorkspacePermissionResponse)
 
 provider_fields = {
     "provider_name": fields.String,
@@ -175,10 +166,10 @@ class TenantListApi(Resource):
                 if tenant_plan:
                     plan = tenant_plan["plan"] or CloudPlan.SANDBOX
                 else:
-                    features = FeatureService.get_features(tenant.id, exclude_vector_space=True)
+                    features = FeatureService.get_features(tenant.id)
                     plan = features.billing.subscription.plan or CloudPlan.SANDBOX
             elif not is_enterprise_only:
-                features = FeatureService.get_features(tenant.id, exclude_vector_space=True)
+                features = FeatureService.get_features(tenant.id)
                 plan = features.billing.subscription.plan or CloudPlan.SANDBOX
 
             # Create a dictionary with tenant attributes
@@ -247,7 +238,13 @@ class TenantApi(Resource):
             else:
                 raise Unauthorized("workspace is archived")
 
-        return dump_response(TenantInfoResponse, WorkspaceService.get_tenant_info(tenant)), 200
+        return (
+            TenantInfoResponse.model_validate(
+                WorkspaceService.get_tenant_info(tenant),
+                from_attributes=True,
+            ).model_dump(mode="json"),
+            200,
+        )
 
 
 @console_ns.route("/workspaces/switch")

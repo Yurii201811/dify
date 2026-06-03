@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import time
-from typing import override
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
@@ -153,7 +152,6 @@ class LogstoreWorkflowExecutionRepository(WorkflowExecutionRepository):
 
         return logstore_model
 
-    @override
     def save(self, execution: WorkflowExecution) -> None:
         """
         Save or update a WorkflowExecution domain entity to the logstore.

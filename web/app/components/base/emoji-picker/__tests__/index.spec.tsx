@@ -26,27 +26,26 @@ vi.mock('@/utils/emoji', () => ({
 
 describe('EmojiPicker', () => {
   const mockOnSelect = vi.fn()
-  const mockOnOpenChange = vi.fn()
+  const mockOnClose = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   describe('Rendering', () => {
-    it('renders nothing when closed', () => {
+    it('renders nothing when isModal is false', () => {
       const { container } = render(
-        <EmojiPicker open={false} onOpenChange={mockOnOpenChange} />,
+        <EmojiPicker isModal={false} />,
       )
       expect(container.firstChild).toBeNull()
     })
 
-    it('renders modal when open', async () => {
+    it('renders modal when isModal is true', async () => {
       await act(async () => {
         render(
-          <EmojiPicker open onOpenChange={mockOnOpenChange} />,
+          <EmojiPicker isModal={true} />,
         )
       })
-      expect(screen.getByRole('dialog', { name: /Emoji/i }))!.toBeInTheDocument()
       expect(screen.getByPlaceholderText('Search emojis...'))!.toBeInTheDocument()
       expect(screen.getByText(/Cancel/i))!.toBeInTheDocument()
       expect(screen.getByText(/OK/i))!.toBeInTheDocument()
@@ -55,7 +54,7 @@ describe('EmojiPicker', () => {
     it('OK button is disabled initially', async () => {
       await act(async () => {
         render(
-          <EmojiPicker open onOpenChange={mockOnOpenChange} />,
+          <EmojiPicker />,
         )
       })
       const okButton = screen.getByText(/OK/i).closest('button')
@@ -66,7 +65,7 @@ describe('EmojiPicker', () => {
       const customClass = 'custom-wrapper-class'
       await act(async () => {
         render(
-          <EmojiPicker open onOpenChange={mockOnOpenChange} className={customClass} />,
+          <EmojiPicker className={customClass} />,
         )
       })
       const dialog = screen.getByRole('dialog')
@@ -78,7 +77,7 @@ describe('EmojiPicker', () => {
     it('calls onSelect with selected emoji and background when OK is clicked', async () => {
       await act(async () => {
         render(
-          <EmojiPicker open onOpenChange={mockOnOpenChange} onSelect={mockOnSelect} />,
+          <EmojiPicker onSelect={mockOnSelect} />,
         )
       })
 
@@ -96,10 +95,10 @@ describe('EmojiPicker', () => {
       expect(mockOnSelect).toHaveBeenCalledWith(expect.any(String), expect.any(String))
     })
 
-    it('closes when Cancel is clicked', async () => {
+    it('calls onClose when Cancel is clicked', async () => {
       await act(async () => {
         render(
-          <EmojiPicker open onOpenChange={mockOnOpenChange} />,
+          <EmojiPicker onClose={mockOnClose} />,
         )
       })
 
@@ -108,7 +107,7 @@ describe('EmojiPicker', () => {
         fireEvent.click(cancelButton)
       })
 
-      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+      expect(mockOnClose).toHaveBeenCalled()
     })
   })
 })

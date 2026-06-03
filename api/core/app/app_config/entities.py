@@ -237,9 +237,7 @@ class EasyUIBasedAppConfig(AppConfig):
     """
 
     app_model_config_from: EasyUIBasedAppModelConfigFrom
-    # Optional: an Agent App has no legacy app_model_config row, so the id may be
-    # absent (persistence then stores NULL for the conversation's id).
-    app_model_config_id: str | None = None
+    app_model_config_id: str
     app_model_config_dict: dict[str, Any]
     model: ModelConfigEntity
     prompt_template: PromptTemplateEntity

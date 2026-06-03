@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, TypedDict, override
+from typing import Any, TypedDict
 
 import orjson
 from pydantic import BaseModel
@@ -29,7 +29,6 @@ class Jieba(BaseKeyword):
         super().__init__(dataset)
         self._config = KeywordTableConfig()
 
-    @override
     def create(self, texts: list[Document], **kwargs) -> BaseKeyword:
         lock_name = f"keyword_indexing_lock_{self.dataset.id}"
         with redis_client.lock(lock_name, timeout=600):
@@ -49,7 +48,6 @@ class Jieba(BaseKeyword):
 
             return self
 
-    @override
     def add_texts(self, texts: list[Document], **kwargs):
         lock_name = f"keyword_indexing_lock_{self.dataset.id}"
         with redis_client.lock(lock_name, timeout=600):
@@ -74,14 +72,12 @@ class Jieba(BaseKeyword):
 
             self._save_dataset_keyword_table(keyword_table)
 
-    @override
     def text_exists(self, id: str) -> bool:
         keyword_table = self._get_dataset_keyword_table()
         if keyword_table is None:
             return False
         return id in set.union(*keyword_table.values())
 
-    @override
     def delete_by_ids(self, ids: list[str]):
         lock_name = f"keyword_indexing_lock_{self.dataset.id}"
         with redis_client.lock(lock_name, timeout=600):
@@ -91,7 +87,6 @@ class Jieba(BaseKeyword):
 
             self._save_dataset_keyword_table(keyword_table)
 
-    @override
     def search(self, query: str, **kwargs: Any) -> list[Document]:
         keyword_table = self._get_dataset_keyword_table()
 
@@ -127,7 +122,6 @@ class Jieba(BaseKeyword):
 
         return documents
 
-    @override
     def delete(self):
         lock_name = f"keyword_indexing_lock_{self.dataset.id}"
         with redis_client.lock(lock_name, timeout=600):

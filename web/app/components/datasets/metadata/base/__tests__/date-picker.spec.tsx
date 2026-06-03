@@ -1,7 +1,5 @@
-import type { ReactElement } from 'react'
-import { fireEvent, render as rtlRender, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { createAccountProfileQueryWrapper } from '@/test/account-profile-query'
 import WrappedDatePicker from '../date-picker'
 
 type TriggerArgs = {
@@ -45,11 +43,6 @@ vi.mock('@/hooks/use-timestamp', () => ({
     },
   }),
 }))
-
-const render = (ui: ReactElement) => {
-  const Wrapper = createAccountProfileQueryWrapper()
-  return rtlRender(ui, { wrapper: Wrapper })
-}
 
 describe('WrappedDatePicker', () => {
   describe('Rendering', () => {
@@ -98,21 +91,6 @@ describe('WrappedDatePicker', () => {
         <WrappedDatePicker value={timestamp} onChange={handleChange} />,
       )
       expect(screen.getByRole('button', { name: 'common.operation.clear' })).toBeInTheDocument()
-    })
-
-    it('should include the field label in the trigger accessible name', () => {
-      const handleChange = vi.fn()
-      render(<WrappedDatePicker label="Metadata field" onChange={handleChange} />)
-
-      expect(screen.getByRole('button', { name: 'Metadata field: dataset.metadata.chooseTime' })).toBeInTheDocument()
-    })
-
-    it('should include the field label in the clear button accessible name', () => {
-      const handleChange = vi.fn()
-      const timestamp = 1609459200
-      render(<WrappedDatePicker label="Metadata field" value={timestamp} onChange={handleChange} />)
-
-      expect(screen.getByRole('button', { name: 'Metadata field: common.operation.clear' })).toBeInTheDocument()
     })
   })
 

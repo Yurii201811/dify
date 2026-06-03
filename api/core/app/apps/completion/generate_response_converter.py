@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Any, cast, override
+from typing import Any, cast
 
 from pydantic import JsonValue
 
@@ -16,7 +16,6 @@ from core.app.entities.task_entities import (
 
 class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[CompletionAppBlockingResponse]):
     @classmethod
-    @override
     def convert_blocking_full_response(cls, blocking_response: CompletionAppBlockingResponse):
         """
         Convert blocking full response.
@@ -37,7 +36,6 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
         return response
 
     @classmethod
-    @override
     def convert_blocking_simple_response(cls, blocking_response: CompletionAppBlockingResponse):
         """
         Convert blocking simple response.
@@ -55,7 +53,6 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
         return response
 
     @classmethod
-    @override
     def convert_stream_full_response(
         cls, stream_response: Generator[AppStreamResponse, None, None]
     ) -> Generator[dict[str, Any] | str, None, None]:
@@ -86,7 +83,6 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
             yield response_chunk
 
     @classmethod
-    @override
     def convert_stream_simple_response(
         cls, stream_response: Generator[AppStreamResponse, None, None]
     ) -> Generator[dict[str, Any] | str, None, None]:
@@ -109,18 +105,17 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
                 "created_at": chunk.created_at,
             }
 
-            match sub_stream_response:
-                case MessageEndStreamResponse():
-                    sub_stream_response_dict = sub_stream_response.model_dump(mode="json")
-                    metadata = sub_stream_response_dict.get("metadata", {})
-                    if not isinstance(metadata, dict):
-                        metadata = {}
-                    sub_stream_response_dict["metadata"] = cls._get_simple_metadata(metadata)
-                    response_chunk.update(sub_stream_response_dict)
-                case ErrorStreamResponse():
-                    data = cls._error_to_stream_response(sub_stream_response.err)
-                    response_chunk.update(data)
-                case _:
-                    response_chunk.update(sub_stream_response.model_dump(mode="json"))
+            if isinstance(sub_stream_response, MessageEndStreamResponse):
+                sub_stream_response_dict = sub_stream_response.model_dump(mode="json")
+                metadata = sub_stream_response_dict.get("metadata", {})
+                if not isinstance(metadata, dict):
+                    metadata = {}
+                sub_stream_response_dict["metadata"] = cls._get_simple_metadata(metadata)
+                response_chunk.update(sub_stream_response_dict)
+            elif isinstance(sub_stream_response, ErrorStreamResponse):
+                data = cls._error_to_stream_response(sub_stream_response.err)
+                response_chunk.update(data)
+            else:
+                response_chunk.update(sub_stream_response.model_dump(mode="json"))
 
             yield response_chunk

@@ -174,11 +174,6 @@ describe('BaseField', () => {
       onChange,
     })
 
-    const radioGroup = screen.getByRole('radiogroup', { name: 'Visibility' })
-    expect(radioGroup).toHaveClass('flex')
-    expect(radioGroup).toHaveClass('items-center')
-    expect(radioGroup).not.toHaveClass('flex-col')
-
     await act(async () => {
       fireEvent.click(screen.getByText('Private'))
     })
@@ -454,11 +449,6 @@ describe('BaseField', () => {
     expect(screen.getByText('O1')).toBeInTheDocument()
     expect(screen.getByText('O2')).toBeInTheDocument()
     expect(screen.getByText('O3')).toBeInTheDocument()
-
-    const radioGroup = screen.getByRole('radiogroup', { name: 'Vertical' })
-    expect(radioGroup).toHaveClass('flex-col')
-    expect(radioGroup).toHaveClass('items-stretch')
-    expect(radioGroup).not.toHaveClass('items-center')
   })
 
   it('should render radio UI when showRadioUI is true', () => {
@@ -473,7 +463,7 @@ describe('BaseField', () => {
       },
     })
     expect(screen.getByText('Option 1')).toBeInTheDocument()
-    expect(screen.getByRole('radiogroup', { name: 'UI Radio' })).toBeInTheDocument()
+    expect(screen.getByTestId('radio-group')).toBeInTheDocument()
   })
 
   it('should apply disabled styles', () => {

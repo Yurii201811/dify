@@ -1,8 +1,7 @@
 import type { ModelProvider } from '../declarations'
-import { useQuery } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useCredentialStatus } from '@/app/components/header/account-setting/model-provider-page/model-auth/hooks'
-import { IS_CLOUD_EDITION } from '@/config'
-import { consoleQuery } from '@/service/client'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import {
   PreferredProviderTypeEnum,
 } from '../declarations'
@@ -81,10 +80,8 @@ export function useCredentialPanelState(provider: ModelProvider | undefined): Cr
     current_credential_name,
   } = useCredentialStatus(provider)
 
-  const { data: trialModels = [] } = useQuery(consoleQuery.trialModels.get.queryOptions({
-    enabled: IS_CLOUD_EDITION,
-    select: data => data.trial_models,
-  }))
+  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
+  const trialModels = systemFeatures.trial_models
 
   const preferredType = provider?.preferred_provider_type
 

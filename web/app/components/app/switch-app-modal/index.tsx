@@ -26,7 +26,6 @@ import AppsFull from '@/app/components/billing/apps-full-in-dialog'
 import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useAppContext } from '@/context/app-context'
 import { useProviderContext } from '@/context/provider-context'
-import { useSetLocalStorage } from '@/hooks/use-local-storage'
 import { useRouter } from '@/next/navigation'
 import { deleteApp, switchApp } from '@/service/apps'
 import { AppModeEnum } from '@/types/app'
@@ -61,8 +60,6 @@ const SwitchAppModal = ({ show, appDetail, inAppDetail = false, onSuccess, onClo
   const [removeOriginal, setRemoveOriginal] = useState<boolean>(false)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
 
-  const setNeedRefresh = useSetLocalStorage<string>(NEED_REFRESH_APP_LIST_KEY, { raw: true })
-
   const goStart = async () => {
     try {
       const { new_app_id: newAppID } = await switchApp({
@@ -81,7 +78,7 @@ const SwitchAppModal = ({ show, appDetail, inAppDetail = false, onSuccess, onClo
         setAppDetail()
       if (removeOriginal)
         await deleteApp(appDetail.id)
-      setNeedRefresh('1')
+      localStorage.setItem(NEED_REFRESH_APP_LIST_KEY, '1')
       getRedirection(
         isCurrentWorkspaceEditor,
         {
@@ -152,13 +149,15 @@ const SwitchAppModal = ({ show, appDetail, inAppDetail = false, onSuccess, onClo
             </div>
             {showAppIconPicker && (
               <AppIconPicker
-                open={showAppIconPicker}
-                initialEmoji={appIcon.type === 'emoji'
-                  ? { icon: appIcon.icon, background: appIcon.background }
-                  : undefined}
-                onOpenChange={setShowAppIconPicker}
                 onSelect={(payload) => {
                   setAppIcon(payload)
+                  setShowAppIconPicker(false)
+                }}
+                onClose={() => {
+                  setAppIcon(appDetail.icon_type === 'image'
+                    ? { type: 'image' as const, url: appDetail.icon_url, fileId: appDetail.icon }
+                    : { type: 'emoji' as const, icon: appDetail.icon, background: appDetail.icon_background })
+                  setShowAppIconPicker(false)
                 }}
               />
             )}

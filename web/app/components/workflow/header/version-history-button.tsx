@@ -6,14 +6,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@langgenius/dify-ui/tooltip'
-import { useHotkey } from '@tanstack/react-hotkeys'
 import * as React from 'react'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import useTheme from '@/hooks/use-theme'
 import { ShortcutKbd } from '../shortcuts/shortcut-kbd'
-
-const VERSION_HISTORY_HOTKEY = 'Mod+Shift+H'
+import { useWorkflowShortcut } from '../shortcuts/use-workflow-hotkeys'
 
 type VersionHistoryButtonProps = {
   onClick: () => Promise<unknown> | unknown
@@ -26,7 +24,7 @@ const PopupContent = React.memo(() => {
       <div className="px-0.5 system-xs-medium text-text-secondary">
         {t('common.versionHistory', { ns: 'workflow' })}
       </div>
-      <ShortcutKbd hotkey={VERSION_HISTORY_HOTKEY} bgColor="gray" textColor="secondary" />
+      <ShortcutKbd shortcut="workflow.version-history" bgColor="gray" textColor="secondary" />
     </div>
   )
 })
@@ -41,10 +39,8 @@ const VersionHistoryButton: FC<VersionHistoryButtonProps> = ({
     await onClick?.()
   }, [onClick])
 
-  useHotkey(VERSION_HISTORY_HOTKEY, () => {
-    void handleViewVersionHistory()
-  }, {
-    ignoreInputs: true,
+  useWorkflowShortcut('workflow.version-history', () => {
+    handleViewVersionHistory()
   })
 
   return (

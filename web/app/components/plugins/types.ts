@@ -190,7 +190,7 @@ export type PluginManifestInMarket = {
   introduction: string
   verified: boolean
   install_count: number
-  badges: string[] | null
+  badges: string[]
   verification: {
     authorized_category: 'langgenius' | 'partner' | 'community'
   }
@@ -255,7 +255,7 @@ export type Plugin = {
     settings: CredentialFormSchemaBase[]
   }
   tags: { name: string }[]
-  badges: string[] | null
+  badges: string[]
   verification: {
     authorized_category: 'langgenius' | 'partner' | 'community'
   }

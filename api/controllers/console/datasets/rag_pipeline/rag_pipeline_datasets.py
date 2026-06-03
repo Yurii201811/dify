@@ -1,6 +1,6 @@
 from flask_restx import Resource, marshal
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from werkzeug.exceptions import Forbidden
 
 import services
@@ -11,13 +11,10 @@ from controllers.console.wraps import (
     account_initialization_required,
     cloud_edition_billing_rate_limit_check,
     setup_required,
-    with_current_tenant_id,
-    with_current_user,
 )
 from extensions.ext_database import db
 from fields.dataset_fields import dataset_detail_fields
-from libs.login import login_required
-from models import Account
+from libs.login import current_account_with_tenant, login_required
 from models.dataset import DatasetPermissionEnum
 from services.dataset_service import DatasetPermissionService, DatasetService
 from services.entities.knowledge_entities.rag_pipeline_entities import IconInfo, RagPipelineDatasetCreateEntity
@@ -38,10 +35,9 @@ class CreateRagPipelineDatasetApi(Resource):
     @login_required
     @account_initialization_required
     @cloud_edition_billing_rate_limit_check("knowledge")
-    @with_current_user
-    @with_current_tenant_id
-    def post(self, current_tenant_id: str, current_user: Account):
+    def post(self):
         payload = RagPipelineDatasetImportPayload.model_validate(console_ns.payload or {})
+        current_user, current_tenant_id = current_account_with_tenant()
         # The role of the current user in the ta table must be admin, owner, or editor, or dataset_operator
         if not current_user.is_dataset_editor:
             raise Forbidden()
@@ -58,13 +54,12 @@ class CreateRagPipelineDatasetApi(Resource):
             yaml_content=payload.yaml_content,
         )
         try:
-            with Session(db.engine, expire_on_commit=False) as session:
+            with sessionmaker(db.engine).begin() as session:
                 rag_pipeline_dsl_service = RagPipelineDslService(session)
                 import_info = rag_pipeline_dsl_service.create_rag_pipeline_dataset(
                     tenant_id=current_tenant_id,
                     rag_pipeline_dataset_create_entity=rag_pipeline_dataset_create_entity,
                 )
-                session.commit()
             if rag_pipeline_dataset_create_entity.permission == "partial_members":
                 DatasetPermissionService.update_partial_member_list(
                     current_tenant_id,
@@ -83,10 +78,10 @@ class CreateEmptyRagPipelineDatasetApi(Resource):
     @login_required
     @account_initialization_required
     @cloud_edition_billing_rate_limit_check("knowledge")
-    @with_current_user
-    @with_current_tenant_id
-    def post(self, current_tenant_id: str, current_user: Account):
+    def post(self):
         # The role of the current user in the ta table must be admin, owner, or editor, or dataset_operator
+        current_user, current_tenant_id = current_account_with_tenant()
+
         if not current_user.is_dataset_editor:
             raise Forbidden()
         dataset = DatasetService.create_empty_rag_pipeline_dataset(

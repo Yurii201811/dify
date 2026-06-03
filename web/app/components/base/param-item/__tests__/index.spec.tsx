@@ -17,15 +17,13 @@ describe('ParamItem', () => {
     vi.clearAllMocks()
   })
 
-  const getSlider = () => screen.getByLabelText('Test Param', {
-    selector: 'input[type="range"]',
-  })
+  const getSlider = () => screen.getByLabelText('Test Param')
 
   describe('Rendering', () => {
     it('should render the parameter name', () => {
       render(<ParamItem {...defaultProps} />)
 
-      expect(screen.getByText('Test Param', { selector: 'span' })).toBeInTheDocument()
+      expect(screen.getByText('Test Param')).toBeInTheDocument()
     })
 
     it('should render a tooltip trigger by default', () => {

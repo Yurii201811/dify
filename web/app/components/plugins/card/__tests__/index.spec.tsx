@@ -465,14 +465,6 @@ describe('Card', () => {
 
       expect(screen.queryByTestId('partner-badge')).not.toBeInTheDocument()
     })
-
-    it('should handle null badges from the marketplace API', () => {
-      const plugin = createMockPlugin({ badges: null })
-
-      render(<Card payload={plugin} />)
-
-      expect(screen.queryByTestId('partner-badge')).not.toBeInTheDocument()
-    })
   })
 
   // ================================

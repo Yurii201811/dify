@@ -32,10 +32,10 @@ const getLoopRunKey = (loop: NodeTracing[], fallbackIndex: number) => {
 }
 
 type Props = {
-  readonly list: NodeTracing[][]
-  readonly onBack: () => void
-  readonly loopDurationMap?: LoopDurationMap
-  readonly loopVariableMap?: LoopVariableMap
+  list: NodeTracing[][]
+  onBack: () => void
+  loopDurationMap?: LoopDurationMap
+  loopVariableMap?: LoopVariableMap
 }
 
 const LoopResultPanel: FC<Props> = ({

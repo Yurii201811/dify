@@ -19,7 +19,7 @@ vi.mock('@tanstack/react-query', () => ({
   useSuspenseQuery: mocks.useSuspenseQuery,
 }))
 
-vi.mock('@/features/system-features/client', () => ({
+vi.mock('@/service/system-features', () => ({
   systemFeaturesQueryOptions: () => ({}),
 }))
 

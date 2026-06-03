@@ -81,13 +81,7 @@ def controller_module(monkeypatch: pytest.MonkeyPatch):
 
 
 def _mock_account(user_id: str = "user-123") -> SimpleNamespace:
-    return SimpleNamespace(
-        id=user_id,
-        status="active",
-        is_authenticated=True,
-        current_tenant_id=None,
-        is_admin_or_owner=False,
-    )
+    return SimpleNamespace(id=user_id, status="active", is_authenticated=True, current_tenant_id=None)
 
 
 def _set_current_account(
@@ -155,7 +149,6 @@ def test_builtin_provider_add_passes_payload(
         credentials={"api_key": "sk-test"},
         name="MyTool",
         api_type=controller_module.CredentialType.API_KEY,
-        visibility=None,
     )
 
 
@@ -204,12 +197,7 @@ def test_builtin_provider_credentials_get(app: Flask, controller_module, monkeyp
         resp = controller_module.ToolBuiltinProviderGetCredentialsApi().get(provider="demo")
 
     assert resp == [{"cred": 1}]
-    service_mock.assert_called_once_with(
-        tenant_id="tenant-cred",
-        provider_name="demo",
-        user=user,
-        include_credential_ids=None,
-    )
+    service_mock.assert_called_once_with(tenant_id="tenant-cred", provider_name="demo")
 
 
 def test_api_provider_remote_schema_get(app: Flask, controller_module, monkeypatch: pytest.MonkeyPatch):

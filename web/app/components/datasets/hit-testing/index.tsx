@@ -18,7 +18,6 @@ import {
   DrawerPortal,
   DrawerViewport,
 } from '@langgenius/dify-ui/drawer'
-import { Pagination } from '@langgenius/dify-ui/pagination'
 import { useBoolean } from 'ahooks'
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
@@ -26,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { useContext } from 'use-context-selector'
 import FloatRightContainer from '@/app/components/base/float-right-container'
 import Loading from '@/app/components/base/loading'
+import Pagination from '@/app/components/base/pagination'
 import docStyle from '@/app/components/datasets/documents/detail/completed/style.module.css'
 import DatasetDetailContext from '@/context/dataset-detail'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
@@ -63,7 +63,6 @@ const HitTestingPage: FC<Props> = ({ datasetId }: Props) => {
   const { data: recordsRes, refetch: recordsRefetch, isLoading: isRecordsLoading } = useDatasetTestingRecords(datasetId, { limit, page: currPage + 1 })
 
   const total = recordsRes?.total || 0
-  const totalPages = total ? Math.max(Math.ceil(total / limit), 1) : 1
 
   const { dataset: currentDataset } = useContext(DatasetDetailContext)
   const isExternal = currentDataset?.provider === 'external'
@@ -152,19 +151,7 @@ const HitTestingPage: FC<Props> = ({ datasetId }: Props) => {
           <>
             <Records records={recordsRes?.data} onClickRecord={handleClickRecord} />
             {(total && total > limit)
-              ? (
-                  <Pagination
-                    page={currPage + 1}
-                    totalPages={totalPages}
-                    onPageChange={page => setCurrPage(page - 1)}
-                    labels={{
-                      previous: t('pagination.previous', { ns: 'common' }),
-                      next: t('pagination.next', { ns: 'common' }),
-                      editPageNumber: (page, totalPages) => t('pagination.editPageNumber', { ns: 'common', page, totalPages }),
-                      pageNumberInput: t('pagination.pageNumber', { ns: 'common' }),
-                    }}
-                  />
-                )
+              ? <Pagination current={currPage} onChange={setCurrPage} total={total} limit={limit} />
               : null}
           </>
         )}

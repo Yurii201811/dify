@@ -3,10 +3,7 @@ import logging
 import time as _time
 import uuid
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypedDict
-
-if TYPE_CHECKING:
-    from models.account import Account
+from typing import Any, TypedDict
 
 from sqlalchemy import delete, desc, func, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -17,7 +14,6 @@ from core.helper.provider_cache import NoOpProviderCredentialCache
 from core.helper.provider_encryption import ProviderConfigEncrypter, create_provider_encrypter
 from core.plugin.entities.plugin_daemon import CredentialType
 from core.plugin.impl.oauth import OAuthHandler
-from core.plugin.plugin_service import PluginService
 from core.tools.utils.system_encryption import decrypt_system_params
 from core.trigger.entities.api_entities import (
     TriggerProviderApiEntity,
@@ -41,6 +37,7 @@ from models.trigger import (
     TriggerSubscription,
     WorkflowPluginTrigger,
 )
+from services.plugin.plugin_service import PluginService
 
 logger = logging.getLogger(__name__)
 
@@ -69,37 +66,21 @@ class TriggerProviderService:
 
     @classmethod
     def list_trigger_provider_subscriptions(
-        cls,
-        tenant_id: str,
-        provider_id: TriggerProviderID,
-        user: "Account | None" = None,
+        cls, tenant_id: str, provider_id: TriggerProviderID
     ) -> list[TriggerProviderSubscriptionApiEntity]:
-        """List all trigger subscriptions for the current tenant, filtered by visibility."""
-        from models.credential_permission import CredentialType as CredPermType
-        from services.credential_permission_service import CredentialPermissionService
-
+        """List all trigger subscriptions for the current tenant"""
         subscriptions: list[TriggerProviderSubscriptionApiEntity] = []
         workflows_in_use_map: dict[str, int] = {}
         with Session(db.engine, expire_on_commit=False) as session:
-            # Get all subscriptions with visibility filtering
-            query = (
+            # Get all subscriptions
+            subscriptions_db = session.scalars(
                 select(TriggerSubscription)
                 .where(
                     TriggerSubscription.tenant_id == tenant_id,
                     TriggerSubscription.provider_id == str(provider_id),
                 )
                 .order_by(desc(TriggerSubscription.created_at))
-            )
-            if user is not None:
-                query = CredentialPermissionService.apply_visibility_filter(
-                    query,
-                    model_id_column=TriggerSubscription.id,
-                    model_user_id_column=TriggerSubscription.user_id,
-                    model_visibility_column=TriggerSubscription.visibility,
-                    credential_type=CredPermType.TRIGGER_SUBSCRIPTION,
-                    user=user,
-                )
-            subscriptions_db = session.scalars(query).all()
+            ).all()
             subscriptions = [subscription.to_api_entity() for subscription in subscriptions_db]
             if not subscriptions:
                 return []

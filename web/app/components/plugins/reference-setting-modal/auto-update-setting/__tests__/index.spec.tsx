@@ -1,14 +1,13 @@
 import type { AutoUpdateConfig } from '../types'
 import type { PluginDeclaration, PluginDetail } from '@/app/components/plugins/types'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render as rtlRender, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import * as React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createAccountProfileQueryClient } from '@/test/account-profile-query'
 import { PluginCategoryEnum, PluginSource } from '../../../types'
 import { defaultValue } from '../config'
 import AutoUpdateSetting from '../index'
@@ -292,22 +291,21 @@ const createMockAutoUpdateConfig = (overrides: Partial<AutoUpdateConfig> = {}): 
 // Helper Functions
 // ================================
 
-const createQueryClient = () => createAccountProfileQueryClient({ timezone: mockTimezone })
-
-const render = (ui: React.ReactElement) => {
-  const queryClient = createQueryClient()
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
-  return rtlRender(ui, { wrapper: Wrapper })
-}
+const createQueryClient = () => new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+})
 
 const renderWithQueryClient = (ui: React.ReactElement) => {
   const queryClient = createQueryClient()
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>,
   )
-  return rtlRender(ui, { wrapper: Wrapper })
 }
 
 // ================================

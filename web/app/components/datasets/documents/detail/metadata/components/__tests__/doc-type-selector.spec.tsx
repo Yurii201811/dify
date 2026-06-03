@@ -47,9 +47,12 @@ describe('DocTypeSelector', () => {
     })
 
     it('should render icon buttons for each doc type', () => {
-      render(<DocTypeSelector {...defaultProps} />)
+      const { container } = render(<DocTypeSelector {...defaultProps} />)
 
-      expect(screen.getAllByRole('radio')).toHaveLength(3)
+      // Each doc type renders an IconButton wrapped in Radio
+      const iconButtons = container.querySelectorAll('button[type="button"]')
+      // 3 doc types + 1 confirm button = 4 buttons
+      expect(iconButtons.length).toBeGreaterThanOrEqual(3)
     })
 
     it('should render confirm button disabled when tempDocType is empty', () => {

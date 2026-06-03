@@ -13,13 +13,11 @@ import type {
   NodeOutPutVar,
 } from '@/app/components/workflow/types'
 import { cn } from '@langgenius/dify-ui/cn'
-import { FieldItem, FieldLabel, FieldRoot } from '@langgenius/dify-ui/field'
-import { FieldsetLegend, FieldsetRoot } from '@langgenius/dify-ui/fieldset'
-import { Radio } from '@langgenius/dify-ui/radio'
-import { RadioGroup } from '@langgenius/dify-ui/radio-group'
-import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectLabel, SelectTrigger } from '@langgenius/dify-ui/select'
+import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectTrigger } from '@langgenius/dify-ui/select'
 import { useCallback, useState } from 'react'
 import { Infotip } from '@/app/components/base/infotip'
+import Radio from '@/app/components/base/radio'
+import RadioE from '@/app/components/base/radio/ui'
 import { AppSelector } from '@/app/components/plugins/plugin-detail-panel/app-selector'
 import ModelParameterModal from '@/app/components/plugins/plugin-detail-panel/model-selector'
 import MultipleToolSelector from '@/app/components/plugins/plugin-detail-panel/multiple-tool-selector'
@@ -220,53 +218,41 @@ function Form<
 
       const disabled = isEditMode && (variable === '__model_type' || variable === '__model_name')
       const gridColumnsClassName = radioGridColumnsClassNames[options.length] ?? 'grid-cols-1'
-      const selectedValue = typeof value[variable] === 'string' ? value[variable] : undefined
-      const translatedLabel = label[language] || label.en_US
 
       return (
-        <FieldRoot key={variable} name={variable} className="contents">
-          <FieldsetRoot
-            render={(
-              <RadioGroup
-                value={selectedValue}
-                onValueChange={val => handleFormChange(variable, val)}
-                className={cn(itemClassName, 'grid gap-3 py-3', gridColumnsClassName)}
-              />
+        <div key={variable} className={cn(itemClassName, 'py-3')}>
+          <div className={cn(fieldLabelClassName, 'flex items-center py-2 system-sm-semibold text-text-secondary')}>
+            {label[language] || label.en_US}
+            {required && (
+              <span className="ml-1 text-red-500">*</span>
             )}
-          >
-            <FieldsetLegend className={cn(fieldLabelClassName, 'col-span-full flex items-center py-2 system-sm-semibold text-text-secondary')}>
-              <span>{translatedLabel}</span>
-              {required && (
-                <span className="ml-1 text-red-500">*</span>
-              )}
-              {infotipContent}
-            </FieldsetLegend>
+            {infotipContent}
+          </div>
+          <div className={cn('grid gap-3', gridColumnsClassName)}>
             {options.filter((option) => {
               if (option.show_on.length)
                 return option.show_on.every(showOnItem => value[showOnItem.variable] === showOnItem.value)
 
               return true
             }).map(option => (
-              <FieldItem key={`${variable}-${option.value}`} className="min-w-0">
-                <FieldLabel
-                  className={`
+              <div
+                className={`
                     flex cursor-pointer items-center gap-2 rounded-lg border border-components-option-card-option-border bg-components-option-card-option-bg px-3 py-2
                     ${value[variable] === option.value && 'border-[1.5px] border-components-option-card-option-selected-border bg-components-option-card-option-selected-bg shadow-sm'}
                     ${disabled && 'cursor-not-allowed! opacity-60'}
                   `}
-                >
-                  <Radio value={option.value} disabled={disabled} />
+                onClick={() => handleFormChange(variable, option.value)}
+                key={`${variable}-${option.value}`}
+              >
+                <RadioE isChecked={value[variable] === option.value} />
 
-                  <div className="system-sm-regular text-text-secondary">{option.label[language] || option.label.en_US}</div>
-                </FieldLabel>
-              </FieldItem>
+                <div className="system-sm-regular text-text-secondary">{option.label[language] || option.label.en_US}</div>
+              </div>
             ))}
-            <div className="col-span-full">
-              {fieldMoreInfo?.(formSchema)}
-              {validating && changeKey === variable && <ValidatingTip />}
-            </div>
-          </FieldsetRoot>
-        </FieldRoot>
+          </div>
+          {fieldMoreInfo?.(formSchema)}
+          {validating && changeKey === variable && <ValidatingTip />}
+        </div>
       )
     }
 
@@ -293,12 +279,11 @@ function Form<
         ? formSchema.default
         : value[variable]
       const selectedOption = filteredOptions.find(option => option.value === currentValue)
-      const translatedLabel = label[language] || label.en_US
 
       return (
         <div key={variable} className={cn(itemClassName, 'py-3')}>
           <div className={cn(fieldLabelClassName, 'flex items-center py-2 system-sm-semibold text-text-secondary')}>
-            {translatedLabel}
+            {label[language] || label.en_US}
 
             {required && (
               <span className="ml-1 text-red-500">*</span>
@@ -314,7 +299,6 @@ function Form<
               handleFormChange(variable, nextValue)
             }}
           >
-            <SelectLabel className="sr-only">{translatedLabel}</SelectLabel>
             <SelectTrigger size="medium" className={cn(inputClassName)}>
               {selectedOption?.name ?? placeholder?.[language] ?? placeholder?.en_US}
             </SelectTrigger>
@@ -343,44 +327,26 @@ function Form<
 
       if (show_on.length && !show_on.every(showOnItem => value[showOnItem.variable] === showOnItem.value))
         return null
-      const booleanValue = typeof value[variable] === 'boolean' ? value[variable] : undefined
-      const translatedLabel = label[language] || label.en_US
 
       return (
         <div key={variable} className={cn(itemClassName, 'py-3')}>
-          <FieldRoot name={variable} className="contents">
-            <FieldsetRoot
-              render={(
-                <RadioGroup<boolean>
-                  className="flex items-center justify-between gap-3 py-2"
-                  value={booleanValue}
-                  onValueChange={val => handleFormChange(variable, val)}
-                />
+          <div className="flex items-center justify-between py-2 system-sm-semibold text-text-secondary">
+            <div className="flex items-center space-x-2">
+              <span className={cn(fieldLabelClassName, 'flex items-center py-2 system-sm-semibold text-text-secondary')}>{label[language] || label.en_US}</span>
+              {required && (
+                <span className="ml-1 text-red-500">*</span>
               )}
+              {infotipContent}
+            </div>
+            <Radio.Group
+              className="flex items-center"
+              value={value[variable]}
+              onChange={val => handleFormChange(variable, val)}
             >
-              <FieldsetLegend className={cn(fieldLabelClassName, 'flex items-center py-2 system-sm-semibold text-text-secondary')}>
-                <span>{translatedLabel}</span>
-                {required && (
-                  <span className="ml-1 text-red-500">*</span>
-                )}
-                {infotipContent}
-              </FieldsetLegend>
-              <div className="flex items-center gap-3">
-                <FieldItem>
-                  <FieldLabel className="flex items-center gap-1.5 system-sm-regular text-text-secondary">
-                    <Radio value={true} />
-                    True
-                  </FieldLabel>
-                </FieldItem>
-                <FieldItem>
-                  <FieldLabel className="flex items-center gap-1.5 system-sm-regular text-text-secondary">
-                    <Radio value={false} />
-                    False
-                  </FieldLabel>
-                </FieldItem>
-              </div>
-            </FieldsetRoot>
-          </FieldRoot>
+              <Radio value={true} className="mr-1!">True</Radio>
+              <Radio value={false}>False</Radio>
+            </Radio.Group>
+          </div>
           {fieldMoreInfo?.(formSchema)}
         </div>
       )

@@ -1,6 +1,4 @@
-import type { ReactElement } from 'react'
 import type { MockedFunction } from 'vitest'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLocale } from '@/context/i18n'
@@ -47,20 +45,6 @@ const mockUseRouter = useRouter as unknown as MockedFunction<typeof useRouter>
 const mockUseMailRegister = useMailRegister as unknown as MockedFunction<typeof useMailRegister>
 const mockGetBrowserTimezone = getBrowserTimezone as unknown as MockedFunction<typeof getBrowserTimezone>
 
-const renderWithQueryClient = (ui: ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  })
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>,
-  )
-}
-
 describe('Signup Set Password Page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -77,7 +61,7 @@ describe('Signup Set Password Page', () => {
 
   describe('Registration payload', () => {
     it('should submit locale and browser timezone when setting password', async () => {
-      renderWithQueryClient(<ChangePasswordForm />)
+      render(<ChangePasswordForm />)
 
       fireEvent.change(screen.getByLabelText('common.account.newPassword'), {
         target: { value: 'ValidPass123!' },

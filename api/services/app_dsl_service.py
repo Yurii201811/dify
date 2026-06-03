@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from configs import dify_config
 from constants.dsl_version import CURRENT_APP_DSL_VERSION
-from core.file import remote_fetcher
+from core.helper import ssrf_proxy
 from core.plugin.entities.plugin import PluginDependency
 from core.trigger.constants import (
     TRIGGER_PLUGIN_NODE_TYPE,
@@ -97,7 +97,6 @@ class AppDslService:
         icon: str | None = None,
         icon_background: str | None = None,
         app_id: str | None = None,
-        import_app_id: str | None = None,
     ) -> Import:
         """Import an app from YAML content or URL."""
         import_id = str(uuid.uuid4())
@@ -127,7 +126,7 @@ class AppDslService:
                 ):
                     yaml_url = yaml_url.replace("https://github.com", "https://raw.githubusercontent.com")
                     yaml_url = yaml_url.replace("/blob/", "/")
-                response = remote_fetcher.make_request("GET", yaml_url.strip(), follow_redirects=True, timeout=(10, 10))
+                response = ssrf_proxy.get(yaml_url.strip(), follow_redirects=True, timeout=(10, 10))
                 response.raise_for_status()
                 content = response.content.decode()
 
@@ -263,7 +262,6 @@ class AppDslService:
                 icon=icon,
                 icon_background=icon_background,
                 dependencies=check_dependencies_pending_data,
-                import_app_id=import_app_id,
             )
 
             draft_var_srv = WorkflowDraftVariableService(session=self._session)
@@ -387,7 +385,6 @@ class AppDslService:
         icon: str | None = None,
         icon_background: str | None = None,
         dependencies: list[PluginDependency] | None = None,
-        import_app_id: str | None = None,
     ) -> App:
         """Create a new app or update an existing one."""
         app_data = data.get("app", {})
@@ -420,7 +417,7 @@ class AppDslService:
 
             # Create new app
             app = App()
-            app.id = import_app_id or str(uuid4())
+            app.id = str(uuid4())
             app.tenant_id = account.current_tenant_id
             app.mode = app_mode
             app.name = name or app_data.get("name", "")

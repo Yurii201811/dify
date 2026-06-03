@@ -1,6 +1,6 @@
 import type { Status } from './declarations'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { useTranslation } from 'react-i18next'
+import Indicator from '../../indicator'
 
 type OperateProps = {
   isOpen: boolean
@@ -71,13 +71,13 @@ const Operate = ({
           status === 'fail' && (
             <div className="mr-4 flex items-center">
               <div className="text-xs text-[#D92D20]">{t('provider.invalidApiKey', { ns: 'common' })}</div>
-              <StatusDot status="error" className="ml-2" />
+              <Indicator color="red" className="ml-2" />
             </div>
           )
         }
         {
           status === 'success' && (
-            <StatusDot status="success" className="mr-4" />
+            <Indicator color="green" className="mr-4" />
           )
         }
         <div

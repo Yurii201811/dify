@@ -267,30 +267,22 @@ export const useUpdateModelProviders = () => {
   return updateModelProviders
 }
 
-export const useMarketplaceAllPlugins = (providers: ModelProvider[], searchText: string, enabled = true) => {
+export const useMarketplaceAllPlugins = (providers: ModelProvider[], searchText: string) => {
   const exclude = useMemo(() => {
     return providers.map(provider => provider.provider.replace(/(.+)\/([^/]+)$/, '$1'))
   }, [providers])
   const {
     plugins: collectionPlugins = [],
     isLoading: isCollectionLoading,
-  } = useMarketplacePluginsByCollectionId(enabled ? '__model-settings-pinned-models' : undefined)
+  } = useMarketplacePluginsByCollectionId('__model-settings-pinned-models')
   const {
     plugins,
     queryPlugins,
     queryPluginsWithDebounced,
-    cancelQueryPluginsWithDebounced = () => {},
-    resetPlugins = () => {},
     isLoading: isPluginsLoading,
   } = useMarketplacePlugins()
 
   useEffect(() => {
-    if (!enabled) {
-      cancelQueryPluginsWithDebounced()
-      resetPlugins()
-      return
-    }
-
     if (searchText) {
       queryPluginsWithDebounced({
         query: searchText,
@@ -312,12 +304,9 @@ export const useMarketplaceAllPlugins = (providers: ModelProvider[], searchText:
         sort_order: 'DESC',
       })
     }
-  }, [cancelQueryPluginsWithDebounced, enabled, queryPlugins, queryPluginsWithDebounced, resetPlugins, searchText, exclude])
+  }, [queryPlugins, queryPluginsWithDebounced, searchText, exclude])
 
   const allPlugins = useMemo(() => {
-    if (!enabled)
-      return []
-
     const allPlugins = collectionPlugins.filter(plugin => !exclude.includes(plugin.plugin_id))
 
     if (plugins?.length) {
@@ -330,11 +319,11 @@ export const useMarketplaceAllPlugins = (providers: ModelProvider[], searchText:
     }
 
     return allPlugins
-  }, [enabled, plugins, collectionPlugins, exclude])
+  }, [plugins, collectionPlugins, exclude])
 
   return {
-    plugins: enabled && searchText ? plugins : allPlugins,
-    isLoading: enabled && (isCollectionLoading || isPluginsLoading),
+    plugins: searchText ? plugins : allPlugins,
+    isLoading: isCollectionLoading || isPluginsLoading,
   }
 }
 

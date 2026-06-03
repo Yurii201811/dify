@@ -1,7 +1,6 @@
 import json
 from collections.abc import Generator
 from typing import Any, Literal, cast
-from uuid import UUID
 
 from flask import request
 from flask_restx import Resource, fields, marshal_with
@@ -48,6 +47,7 @@ class NotionEstimatePayload(BaseModel):
 class DataSourceNotionListQuery(BaseModel):
     dataset_id: str | None = Field(default=None, description="Dataset ID")
     credential_id: str = Field(..., description="Credential ID", min_length=1)
+    datasource_parameters: dict[str, Any] | None = Field(default=None, description="Datasource parameters JSON string")
 
 
 class DataSourceNotionPreviewQuery(BaseModel):
@@ -204,6 +204,9 @@ class DataSourceNotionListApi(Resource):
 
         query = DataSourceNotionListQuery.model_validate(request.args.to_dict())
 
+        # Get datasource_parameters from query string (optional, for GitHub and other datasources)
+        datasource_parameters = query.datasource_parameters or {}
+
         datasource_provider_service = DatasourceProviderService()
         credential = datasource_provider_service.get_datasource_credentials(
             tenant_id=current_tenant_id,
@@ -251,7 +254,7 @@ class DataSourceNotionListApi(Resource):
             online_document_result: Generator[OnlineDocumentPagesMessage, None, None] = (
                 datasource_runtime.get_online_document_pages(
                     user_id=current_user.id,
-                    datasource_parameters={},
+                    datasource_parameters=datasource_parameters,
                     provider_type=datasource_runtime.datasource_provider_type(),
                 )
             )
@@ -290,7 +293,7 @@ class DataSourceNotionApi(Resource):
     @login_required
     @account_initialization_required
     @console_ns.response(200, "Success", console_ns.models[TextContentResponse.__name__])
-    def get(self, page_id: UUID, page_type: str):
+    def get(self, page_id, page_type):
         _, current_tenant_id = current_account_with_tenant()
 
         query = DataSourceNotionPreviewQuery.model_validate(request.args.to_dict())
@@ -303,11 +306,11 @@ class DataSourceNotionApi(Resource):
             plugin_id="langgenius/notion_datasource",
         )
 
-        page_id_str = str(page_id)
+        page_id = str(page_id)
 
         extractor = NotionExtractor(
             notion_workspace_id="",
-            notion_obj_id=page_id_str,
+            notion_obj_id=page_id,
             notion_page_type=page_type,
             notion_access_token=credential.get("integration_secret"),
             tenant_id=current_tenant_id,
@@ -364,7 +367,7 @@ class DataSourceNotionDatasetSyncApi(Resource):
     @login_required
     @account_initialization_required
     @console_ns.response(200, "Success", console_ns.models[SimpleResultResponse.__name__])
-    def get(self, dataset_id: UUID):
+    def get(self, dataset_id):
         dataset_id_str = str(dataset_id)
         dataset = DatasetService.get_dataset(dataset_id_str)
         if dataset is None:
@@ -382,7 +385,7 @@ class DataSourceNotionDocumentSyncApi(Resource):
     @login_required
     @account_initialization_required
     @console_ns.response(200, "Success", console_ns.models[SimpleResultResponse.__name__])
-    def get(self, dataset_id: UUID, document_id: UUID):
+    def get(self, dataset_id, document_id):
         dataset_id_str = str(dataset_id)
         document_id_str = str(document_id)
         dataset = DatasetService.get_dataset(dataset_id_str)

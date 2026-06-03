@@ -4,7 +4,6 @@ import type { AutoUpdateConfig } from './types'
 import type { TriggerParams } from '@/app/components/base/date-and-time-picker/types'
 import { cn } from '@langgenius/dify-ui/cn'
 import { RiTimeLine } from '@remixicon/react'
-import { useQuery } from '@tanstack/react-query'
 import * as React from 'react'
 import { useCallback, useMemo } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -12,8 +11,8 @@ import TimePicker from '@/app/components/base/date-and-time-picker/time-picker'
 import { convertTimezoneToOffsetStr } from '@/app/components/base/date-and-time-picker/utils/dayjs'
 import { ACCOUNT_SETTING_TAB } from '@/app/components/header/account-setting/constants'
 import OptionCard from '@/app/components/workflow/nodes/_base/components/option-card'
+import { useAppContext } from '@/context/app-context'
 import { useModalContextSelector } from '@/context/modal-context'
-import { userProfileQueryOptions } from '@/features/account-profile/client'
 import Label from '../label'
 import PluginsPicker from './plugins-picker'
 import StrategyPicker from './strategy-picker'
@@ -48,10 +47,7 @@ const AutoUpdateSetting: FC<Props> = ({
   onChange,
 }) => {
   const { t } = useTranslation()
-  const { data: timezone } = useQuery({
-    ...userProfileQueryOptions(),
-    select: data => data.profile.timezone ?? undefined,
-  })
+  const { userProfile: { timezone } } = useAppContext()
 
   const {
     strategy_setting,

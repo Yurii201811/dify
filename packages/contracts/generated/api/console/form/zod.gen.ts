@@ -2,15 +2,6 @@
 
 import * as z from 'zod'
 
-/**
- * HumanInputFormSubmitPayload
- */
-export const zHumanInputFormSubmitPayload = z.object({
-  action: z.string(),
-  form_inputs: z.record(z.string(), z.unknown()),
-  inputs: z.record(z.string(), z.unknown()),
-})
-
 export const zGetFormHumanInputByFormTokenPath = z.object({
   form_token: z.string(),
 })
@@ -19,8 +10,6 @@ export const zGetFormHumanInputByFormTokenPath = z.object({
  * Success
  */
 export const zGetFormHumanInputByFormTokenResponse = z.record(z.string(), z.unknown())
-
-export const zPostFormHumanInputByFormTokenBody = zHumanInputFormSubmitPayload
 
 export const zPostFormHumanInputByFormTokenPath = z.object({
   form_token: z.string(),

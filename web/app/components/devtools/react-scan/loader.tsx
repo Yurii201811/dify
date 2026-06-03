@@ -9,9 +9,7 @@ export function ReactScanLoader() {
     <Script
       src="//unpkg.com/react-scan/dist/auto.global.js"
       crossOrigin="anonymous"
-      // React Scan recommends beforeInteractive to catch initial renders, but it
-      // can mismatch with Dify's inline attribution bootstrap during dev hydration.
-      strategy="afterInteractive"
+      strategy="beforeInteractive"
     />
   )
 }

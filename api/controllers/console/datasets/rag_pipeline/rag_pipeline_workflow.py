@@ -1,7 +1,6 @@
 import json
 import logging
 from typing import Any, Literal, cast
-from uuid import UUID
 
 from flask import abort, request
 from flask_restx import Resource
@@ -876,14 +875,14 @@ class RagPipelineWorkflowRunDetailApi(Resource):
     @login_required
     @account_initialization_required
     @get_rag_pipeline
-    def get(self, pipeline: Pipeline, run_id: UUID):
+    def get(self, pipeline: Pipeline, run_id):
         """
         Get workflow run detail
         """
-        run_id_str = str(run_id)
+        run_id = str(run_id)
 
         rag_pipeline_service = RagPipelineService()
-        workflow_run = rag_pipeline_service.get_rag_pipeline_workflow_run(pipeline=pipeline, run_id=run_id_str)
+        workflow_run = rag_pipeline_service.get_rag_pipeline_workflow_run(pipeline=pipeline, run_id=run_id)
         if workflow_run is None:
             raise NotFound("Workflow run not found")
 
@@ -901,17 +900,17 @@ class RagPipelineWorkflowRunNodeExecutionListApi(Resource):
     @login_required
     @account_initialization_required
     @get_rag_pipeline
-    def get(self, pipeline: Pipeline, run_id: UUID):
+    def get(self, pipeline: Pipeline, run_id: str):
         """
         Get workflow run node execution list
         """
-        run_id_str = str(run_id)
+        run_id = str(run_id)
 
         rag_pipeline_service = RagPipelineService()
         user = cast("Account | EndUser", current_user)
         node_executions = rag_pipeline_service.get_rag_pipeline_workflow_run_node_executions(
             pipeline=pipeline,
-            run_id=run_id_str,
+            run_id=run_id,
             user=user,
         )
 
@@ -961,15 +960,15 @@ class RagPipelineTransformApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    def post(self, dataset_id: UUID):
+    def post(self, dataset_id: str):
         current_user, _ = current_account_with_tenant()
 
         if not (current_user.has_edit_permission or current_user.is_dataset_operator):
             raise Forbidden()
 
-        dataset_id_str = str(dataset_id)
+        dataset_id = str(dataset_id)
         rag_pipeline_transform_service = RagPipelineTransformService()
-        result = rag_pipeline_transform_service.transform_dataset(dataset_id_str)
+        result = rag_pipeline_transform_service.transform_dataset(dataset_id)
         return result
 
 

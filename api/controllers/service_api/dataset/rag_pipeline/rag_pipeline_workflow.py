@@ -1,6 +1,5 @@
 from collections.abc import Generator
 from typing import Any
-from uuid import UUID
 
 from flask import request
 from pydantic import BaseModel
@@ -65,11 +64,10 @@ class DatasourcePluginsApi(DatasetApiResource):
             401: "Unauthorized - invalid API token",
         }
     )
-    def get(self, tenant_id: str, dataset_id: UUID):
+    def get(self, tenant_id: str, dataset_id: str):
         """Resource for getting datasource plugins."""
-        dataset_id_str = str(dataset_id)
         # Verify dataset ownership
-        stmt = select(Dataset).where(Dataset.tenant_id == tenant_id, Dataset.id == dataset_id_str)
+        stmt = select(Dataset).where(Dataset.tenant_id == tenant_id, Dataset.id == dataset_id)
         dataset = db.session.scalar(stmt)
         if not dataset:
             raise NotFound("Dataset not found.")
@@ -79,7 +77,7 @@ class DatasourcePluginsApi(DatasetApiResource):
 
         rag_pipeline_service: RagPipelineService = RagPipelineService()
         datasource_plugins: list[dict[Any, Any]] = rag_pipeline_service.get_datasource_plugins(
-            tenant_id=tenant_id, dataset_id=dataset_id_str, is_published=is_published
+            tenant_id=tenant_id, dataset_id=dataset_id, is_published=is_published
         )
         return datasource_plugins, 200
 
@@ -111,11 +109,10 @@ class DatasourceNodeRunApi(DatasetApiResource):
         }
     )
     @service_api_ns.expect(service_api_ns.models[DatasourceNodeRunPayload.__name__])
-    def post(self, tenant_id: str, dataset_id: UUID, node_id: str):
+    def post(self, tenant_id: str, dataset_id: str, node_id: str):
         """Resource for getting datasource plugins."""
-        dataset_id_str = str(dataset_id)
         # Verify dataset ownership
-        stmt = select(Dataset).where(Dataset.tenant_id == tenant_id, Dataset.id == dataset_id_str)
+        stmt = select(Dataset).where(Dataset.tenant_id == tenant_id, Dataset.id == dataset_id)
         dataset = db.session.scalar(stmt)
         if not dataset:
             raise NotFound("Dataset not found.")
@@ -123,7 +120,7 @@ class DatasourceNodeRunApi(DatasetApiResource):
         payload = DatasourceNodeRunPayload.model_validate(service_api_ns.payload or {})
         assert isinstance(current_user, Account)
         rag_pipeline_service: RagPipelineService = RagPipelineService()
-        pipeline: Pipeline = rag_pipeline_service.get_pipeline(tenant_id=tenant_id, dataset_id=dataset_id_str)
+        pipeline: Pipeline = rag_pipeline_service.get_pipeline(tenant_id=tenant_id, dataset_id=dataset_id)
         datasource_node_run_api_entity = DatasourceNodeRunApiEntity.model_validate(
             {
                 **payload.model_dump(exclude_none=True),
@@ -175,11 +172,10 @@ class PipelineRunApi(DatasetApiResource):
         }
     )
     @service_api_ns.expect(service_api_ns.models[PipelineRunApiEntity.__name__])
-    def post(self, tenant_id: str, dataset_id: UUID):
+    def post(self, tenant_id: str, dataset_id: str):
         """Resource for running a rag pipeline."""
-        dataset_id_str = str(dataset_id)
         # Verify dataset ownership
-        stmt = select(Dataset).where(Dataset.tenant_id == tenant_id, Dataset.id == dataset_id_str)
+        stmt = select(Dataset).where(Dataset.tenant_id == tenant_id, Dataset.id == dataset_id)
         dataset = db.session.scalar(stmt)
         if not dataset:
             raise NotFound("Dataset not found.")
@@ -190,7 +186,7 @@ class PipelineRunApi(DatasetApiResource):
             raise Forbidden()
 
         rag_pipeline_service: RagPipelineService = RagPipelineService()
-        pipeline: Pipeline = rag_pipeline_service.get_pipeline(tenant_id=tenant_id, dataset_id=dataset_id_str)
+        pipeline: Pipeline = rag_pipeline_service.get_pipeline(tenant_id=tenant_id, dataset_id=dataset_id)
         try:
             response: dict[Any, Any] | Generator[str, Any, None] = PipelineGenerateService.generate(
                 pipeline=pipeline,

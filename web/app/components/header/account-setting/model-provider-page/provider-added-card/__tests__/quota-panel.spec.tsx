@@ -7,11 +7,11 @@ import QuotaPanel from '../quota-panel'
 let mockWorkspaceData: {
   trial_credits: number
   trial_credits_used: number
-  next_credit_reset_date: number
+  next_credit_reset_date: string
 } | undefined = {
   trial_credits: 100,
   trial_credits_used: 30,
-  next_credit_reset_date: 1735603200,
+  next_credit_reset_date: '2024-12-31',
 }
 let mockWorkspaceIsPending = false
 let mockTrialModels: string[] | undefined = ['langgenius/openai/openai']
@@ -32,22 +32,15 @@ vi.mock('@/app/components/base/icons/src/public/llm', () => {
   }
 })
 
-vi.mock('../use-trial-credits', () => ({
-  useTrialCredits: () => {
-    const totalCredits = mockWorkspaceData?.trial_credits ?? 0
-    const credits = Math.max(totalCredits - (mockWorkspaceData?.trial_credits_used ?? 0), 0)
-    return {
-      credits,
-      totalCredits,
-      isExhausted: credits <= 0,
-      isLoading: mockWorkspaceIsPending && !mockWorkspaceData,
-      nextCreditResetDate: mockWorkspaceData?.next_credit_reset_date,
-    }
-  },
+vi.mock('@/service/use-common', () => ({
+  useCurrentWorkspace: () => ({
+    data: mockWorkspaceData,
+    isPending: mockWorkspaceIsPending,
+  }),
 }))
 
 const renderQuotaPanel = (ui: ReactElement) => renderWithSystemFeatures(ui, {
-  trialModels: mockTrialModels ?? [],
+  systemFeatures: mockTrialModels === undefined ? null : { trial_models: mockTrialModels as never },
 })
 
 vi.mock('../../hooks', () => ({
@@ -85,7 +78,7 @@ describe('QuotaPanel', () => {
     mockWorkspaceData = {
       trial_credits: 100,
       trial_credits_used: 30,
-      next_credit_reset_date: 1735603200,
+      next_credit_reset_date: '2024-12-31',
     }
     mockWorkspaceIsPending = false
     mockTrialModels = ['langgenius/openai/openai']
@@ -125,7 +118,7 @@ describe('QuotaPanel', () => {
     mockWorkspaceData = {
       trial_credits: 10,
       trial_credits_used: 999,
-      next_credit_reset_date: 0,
+      next_credit_reset_date: '',
     }
 
     renderQuotaPanel(<QuotaPanel providers={mockProviders} />)

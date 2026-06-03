@@ -6,7 +6,6 @@ import type {
 } from '@/app/components/workflow/types'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { Switch } from '@langgenius/dify-ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import {
@@ -20,6 +19,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ActionButton, { ActionButtonState } from '@/app/components/base/action-button'
 import Badge from '@/app/components/base/badge/index'
+import Indicator from '@/app/components/header/indicator'
 import { useSelector as useAppContextWithSelector } from '@/context/app-context'
 import { DeliveryMethodType } from '../../types'
 import EmailConfigureModal from './email-configure-modal'
@@ -177,7 +177,7 @@ const DeliveryMethodItem: FC<DeliveryMethodItemProps> = ({
               disabled={readonly}
             >
               {t(`${i18nPrefix}.deliveryMethod.notConfigured`, { ns: 'workflow' })}
-              <StatusDot status="warning" className="ml-1" />
+              <Indicator color="orange" className="ml-1" />
             </Button>
           )}
         </div>

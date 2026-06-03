@@ -31,7 +31,6 @@ import { toast } from '@langgenius/dify-ui/toast'
 import Cookies from 'js-cookie'
 import { API_PREFIX, CSRF_COOKIE_NAME, CSRF_HEADER_NAME, IS_CE_EDITION, PASSPORT_HEADER_NAME, PUBLIC_API_PREFIX, WEB_APP_SHARE_CODE_HEADER_NAME } from '@/config'
 import { asyncRunSafe } from '@/utils'
-import { isClient } from '@/utils/client'
 import { basePath } from '@/utils/var'
 import { base, ContentType, getBaseOptions } from './fetch'
 import { refreshAccessTokenOrReLogin } from './refresh-token'
@@ -133,22 +132,22 @@ export type IOtherOptions = {
 }
 
 function jumpTo(url: string) {
-  if (!url || !isClient)
+  if (!url)
     return
-  const targetPath = new URL(url, window.location.origin).pathname
-  if (targetPath === window.location.pathname)
+  const targetPath = new URL(url, globalThis.location.origin).pathname
+  if (targetPath === globalThis.location.pathname)
     return
-  window.location.href = url
+  globalThis.location.href = url
 }
 
 const OAUTH_AUTHORIZE_PATH = '/account/oauth/authorize'
 
 export const buildSigninUrlWithRedirect = (): string => {
-  const loginUrl = `${isClient ? window.location.origin : ''}${basePath}/signin`
+  const loginUrl = `${globalThis.location.origin}${basePath}/signin`
 
   // Only preserve redirect URL for OAuth authorize pages
-  if (isClient && window.location.pathname.includes(OAUTH_AUTHORIZE_PATH)) {
-    const currentUrl = window.location.href
+  if (globalThis.location.pathname.includes(OAUTH_AUTHORIZE_PATH)) {
+    const currentUrl = globalThis.location.href
     return `${loginUrl}?redirect_url=${encodeURIComponent(currentUrl)}`
   }
 
@@ -166,20 +165,17 @@ function unicodeToChar(text: string) {
 
 const WBB_APP_LOGIN_PATH = '/webapp-signin'
 function requiredWebSSOLogin(message?: string, code?: number) {
-  if (!isClient)
-    return
-
   const params = new URLSearchParams()
   // prevent redirect loop
-  if (window.location.pathname === WBB_APP_LOGIN_PATH)
+  if (globalThis.location.pathname === WBB_APP_LOGIN_PATH)
     return
 
-  params.append('redirect_url', encodeURIComponent(`${window.location.pathname}${window.location.search}`))
+  params.append('redirect_url', encodeURIComponent(`${globalThis.location.pathname}${globalThis.location.search}`))
   if (message)
     params.append('message', message)
   if (code)
     params.append('code', String(code))
-  window.location.href = `${window.location.origin}${basePath}${WBB_APP_LOGIN_PATH}?${params.toString()}`
+  globalThis.location.href = `${globalThis.location.origin}${basePath}${WBB_APP_LOGIN_PATH}?${params.toString()}`
 }
 
 function formatURL(url: string, isPublicAPI: boolean) {
@@ -763,13 +759,10 @@ export const request = async<T>(url: string, options = {}, otherOptions?: IOther
       return resp
     const errResp: Response = err as any
     if (errResp.status === 401) {
-      if (!isClient)
-        return Promise.reject(err)
-
       const [parseErr, errRespData] = await asyncRunSafe<ResponseError>(errResp.json())
-      const loginUrl = `${window.location.origin}${basePath}/signin`
+      const loginUrl = `${globalThis.location.origin}${basePath}/signin`
       if (parseErr) {
-        window.location.href = loginUrl
+        globalThis.location.href = loginUrl
         return Promise.reject(err)
       }
       if (/\/login/.test(url))
@@ -787,7 +780,7 @@ export const request = async<T>(url: string, options = {}, otherOptions?: IOther
       }
       if (code === 'unauthorized_and_force_logout') {
         // Cookies will be cleared by the backend
-        window.location.reload()
+        globalThis.location.reload()
         return Promise.reject(err)
       }
       const {
@@ -803,11 +796,11 @@ export const request = async<T>(url: string, options = {}, otherOptions?: IOther
         return Promise.reject(err)
       }
       if (code === 'not_init_validated' && IS_CE_EDITION) {
-        jumpTo(`${window.location.origin}${basePath}/init`)
+        jumpTo(`${globalThis.location.origin}${basePath}/init`)
         return Promise.reject(err)
       }
       if (code === 'not_setup' && IS_CE_EDITION) {
-        jumpTo(`${window.location.origin}${basePath}/install`)
+        jumpTo(`${globalThis.location.origin}${basePath}/install`)
         return Promise.reject(err)
       }
 
@@ -815,12 +808,7 @@ export const request = async<T>(url: string, options = {}, otherOptions?: IOther
       const [refreshErr] = await asyncRunSafe(refreshAccessTokenOrReLogin(TIME_OUT))
       if (refreshErr === null)
         return baseFetch<T>(url, options, otherOptionsForBaseFetch)
-      // /device is the device-flow chooser; logged-out is a valid state
-      // there. Redirecting to /signin loses the user_code context and
-      // the post-login flow lands on /apps instead of returning here.
-      if (window.location.pathname === `${basePath}/device`)
-        return Promise.reject(err)
-      if (window.location.pathname !== `${basePath}/signin` || !IS_CE_EDITION) {
+      if (location.pathname !== `${basePath}/signin` || !IS_CE_EDITION) {
         jumpTo(buildSigninUrlWithRedirect())
         return Promise.reject(err)
       }

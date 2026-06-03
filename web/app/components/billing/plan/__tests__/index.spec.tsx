@@ -1,9 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { EDUCATION_VERIFYING_LOCALSTORAGE_ITEM } from '@/app/education-apply/constants'
 import { fetchSubscriptionUrls } from '@/service/billing'
 import { Plan, SelfHostedPlan } from '../../type'
 import PlanComp from '../index'
-
-const setEducationVerifyingMock = vi.hoisted(() => vi.fn())
 
 let currentPath = '/billing'
 
@@ -36,18 +35,8 @@ vi.mock('@/context/app-context', () => ({
   }),
 }))
 
-vi.mock('@/hooks/use-local-storage', () => ({
-  useSetLocalStorage: () => setEducationVerifyingMock,
-}))
-
 vi.mock('@/service/billing', () => ({
   fetchSubscriptionUrls: vi.fn(),
-}))
-
-vi.mock('@/service/use-billing', () => ({
-  useCurrentPlanVectorSpace: () => ({
-    data: undefined,
-  }),
 }))
 
 const fetchSubscriptionUrlsMock = vi.mocked(fetchSubscriptionUrls)
@@ -148,7 +137,7 @@ describe('PlanComp', () => {
 
     await waitFor(() => expect(mutateAsyncMock).toHaveBeenCalled())
     await waitFor(() => expect(push).toHaveBeenCalledWith('/education-apply?token=token'))
-    expect(setEducationVerifyingMock).toHaveBeenCalledWith(null)
+    expect(localStorage.removeItem).toHaveBeenCalledWith(EDUCATION_VERIFYING_LOCALSTORAGE_ITEM)
   })
 
   it('shows modal when education verify fails', async () => {

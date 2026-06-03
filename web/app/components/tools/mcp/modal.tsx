@@ -117,6 +117,12 @@ const MCPModalContent: FC<MCPModalContentProps> = ({
 
   const handleIconSelect = (payload: AppIconSelection) => {
     actions.setAppIcon(payload)
+    actions.setShowAppIconPicker(false)
+  }
+
+  const handleIconClose = () => {
+    actions.resetIcon()
+    actions.setShowAppIconPicker(false)
   }
 
   const isSubmitDisabled = !state.name || !state.url || !state.serverIdentifier || state.isFetchingIcon
@@ -254,12 +260,8 @@ const MCPModalContent: FC<MCPModalContentProps> = ({
 
       {state.showAppIconPicker && (
         <AppIconPicker
-          open={state.showAppIconPicker}
-          initialEmoji={state.appIcon.type === 'emoji'
-            ? { icon: state.appIcon.icon, background: state.appIcon.background }
-            : undefined}
-          onOpenChange={actions.setShowAppIconPicker}
           onSelect={handleIconSelect}
+          onClose={handleIconClose}
         />
       )}
     </>

@@ -8,8 +8,8 @@ vi.mock('@remixicon/react', () => ({
 }))
 
 // Mock Indicator
-vi.mock('@langgenius/dify-ui/status-dot', () => ({
-  StatusDot: ({ status }: { status: string }) => <div data-testid={`indicator-${status}`} />,
+vi.mock('@/app/components/header/indicator', () => ({
+  default: ({ color }: { color: string }) => <div data-testid={`indicator-${color}`} />,
 }))
 
 describe('ConfigModel', () => {
@@ -19,7 +19,7 @@ describe('ConfigModel', () => {
 
     expect(screen.getByText(/modelProvider.auth.authorizationError/)).toBeInTheDocument()
     expect(screen.getByTestId('scales-icon')).toBeInTheDocument()
-    expect(screen.getByTestId('indicator-warning')).toBeInTheDocument()
+    expect(screen.getByTestId('indicator-orange')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText(/modelProvider.auth.authorizationError/))
     expect(onClick).toHaveBeenCalled()
@@ -29,7 +29,7 @@ describe('ConfigModel', () => {
     render(<ConfigModel credentialRemoved />)
 
     expect(screen.getByText(/modelProvider.auth.credentialRemoved/)).toBeInTheDocument()
-    expect(screen.getByTestId('indicator-error')).toBeInTheDocument()
+    expect(screen.getByTestId('indicator-red')).toBeInTheDocument()
   })
 
   it('should render standard config message when no flags enabled', () => {

@@ -1,14 +1,12 @@
 import type { EditorState } from 'lexical'
 import type { NoteTheme } from './types'
 import { useCallback } from 'react'
-import { useSetLocalStorage } from '@/hooks/use-local-storage'
 import { useNodeDataUpdate, useWorkflowHistory, WorkflowHistoryEvent } from '../hooks'
 import { NOTE_SHOW_AUTHOR_STORAGE_KEY } from './constants'
 
 export const useNote = (id: string) => {
   const { handleNodeDataUpdateWithSyncDraft } = useNodeDataUpdate()
   const { saveStateToHistory } = useWorkflowHistory()
-  const setShowAuthorStorage = useSetLocalStorage<string>(NOTE_SHOW_AUTHOR_STORAGE_KEY, { raw: true })
 
   const handleThemeChange = useCallback((theme: NoteTheme) => {
     handleNodeDataUpdateWithSyncDraft({ id, data: { theme } })
@@ -23,10 +21,10 @@ export const useNote = (id: string) => {
   }, [handleNodeDataUpdateWithSyncDraft, id])
 
   const handleShowAuthorChange = useCallback((showAuthor: boolean) => {
-    setShowAuthorStorage(String(showAuthor))
+    localStorage.setItem(NOTE_SHOW_AUTHOR_STORAGE_KEY, String(showAuthor))
     handleNodeDataUpdateWithSyncDraft({ id, data: { showAuthor } })
     saveStateToHistory(WorkflowHistoryEvent.NoteChange, { nodeId: id })
-  }, [handleNodeDataUpdateWithSyncDraft, id, saveStateToHistory, setShowAuthorStorage])
+  }, [handleNodeDataUpdateWithSyncDraft, id, saveStateToHistory])
 
   return {
     handleThemeChange,

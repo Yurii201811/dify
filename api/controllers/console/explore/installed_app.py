@@ -12,19 +12,14 @@ from controllers.common.fields import SimpleMessageResponse, SimpleResultMessage
 from controllers.common.schema import register_response_schema_models, register_schema_models
 from controllers.console import console_ns
 from controllers.console.explore.wraps import InstalledAppResource
-from controllers.console.wraps import (
-    account_initialization_required,
-    cloud_edition_billing_resource_check,
-    with_current_tenant_id,
-    with_current_user,
-)
+from controllers.console.wraps import account_initialization_required, cloud_edition_billing_resource_check
 from extensions.ext_database import db
 from fields.base import ResponseModel
 from graphon.file import helpers as file_helpers
 from libs.datetime_utils import naive_utc_now
 from libs.helper import to_timestamp
-from libs.login import login_required
-from models import Account, App, InstalledApp, RecommendedApp
+from libs.login import current_account_with_tenant, login_required
+from models import App, InstalledApp, RecommendedApp
 from models.model import IconType
 from services.account_service import TenantService
 from services.enterprise.enterprise_service import EnterpriseService
@@ -136,10 +131,9 @@ class InstalledAppsListApi(Resource):
     @login_required
     @account_initialization_required
     @console_ns.response(200, "Success", console_ns.models[InstalledAppListResponse.__name__])
-    @with_current_user
-    @with_current_tenant_id
-    def get(self, current_tenant_id: str, current_user: Account):
+    def get(self):
         query = InstalledAppsListQuery.model_validate(request.args.to_dict())
+        current_user, current_tenant_id = current_account_with_tenant()
 
         if query.app_id:
             installed_apps = db.session.scalars(
@@ -218,8 +212,7 @@ class InstalledAppsListApi(Resource):
     @account_initialization_required
     @cloud_edition_billing_resource_check("apps")
     @console_ns.response(200, "Success", console_ns.models[SimpleMessageResponse.__name__])
-    @with_current_tenant_id
-    def post(self, current_tenant_id: str):
+    def post(self):
         payload = InstalledAppCreatePayload.model_validate(console_ns.payload or {})
 
         recommended_app = db.session.scalar(
@@ -227,6 +220,8 @@ class InstalledAppsListApi(Resource):
         )
         if recommended_app is None:
             raise NotFound("Recommended app not found")
+
+        _, current_tenant_id = current_account_with_tenant()
 
         app = db.session.get(App, payload.app_id)
 
@@ -267,18 +262,18 @@ class InstalledAppApi(InstalledAppResource):
     """
 
     @console_ns.response(204, "App uninstalled successfully")
-    @with_current_tenant_id
-    def delete(self, current_tenant_id: str, installed_app: InstalledApp):
+    def delete(self, installed_app):
+        _, current_tenant_id = current_account_with_tenant()
         if installed_app.app_owner_tenant_id == current_tenant_id:
             raise BadRequest("You can't uninstall an app owned by the current tenant")
 
         db.session.delete(installed_app)
         db.session.commit()
 
-        return "", 204
+        return {"result": "success", "message": "App uninstalled successfully"}, 204
 
     @console_ns.response(200, "Success", console_ns.models[SimpleResultMessageResponse.__name__])
-    def patch(self, installed_app: InstalledApp):
+    def patch(self, installed_app):
         payload = InstalledAppUpdatePayload.model_validate(console_ns.payload or {})
 
         commit_args = False

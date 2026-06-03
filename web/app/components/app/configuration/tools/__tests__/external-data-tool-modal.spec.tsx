@@ -60,6 +60,21 @@ vi.mock('@/app/components/base/app-icon', () => ({
   }) => <button onClick={onClick}>open-emoji-picker</button>,
 }))
 
+vi.mock('@/app/components/base/emoji-picker', () => ({
+  default: ({
+    onClose,
+    onSelect,
+  }: {
+    onClose: () => void
+    onSelect: (icon: string, background: string) => void
+  }) => (
+    <div>
+      <button onClick={() => onSelect('sparkles', '#fff')}>select-emoji</button>
+      <button onClick={onClose}>close-emoji</button>
+    </div>
+  ),
+}))
+
 vi.mock('@/app/components/base/features/new-feature-panel/moderation/form-generation', () => ({
   default: ({
     onChange,
@@ -131,14 +146,7 @@ describe('ExternalDataToolModal', () => {
     })
     fireEvent.click(screen.getByText('pick-extension'))
     fireEvent.click(screen.getByText('open-emoji-picker'))
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search emojis...')).toBeInTheDocument()
-    })
-    const emojiButton = document.querySelector('em-emoji')?.closest('button')
-    expect(emojiButton).toBeTruthy()
-    fireEvent.click(emojiButton!)
-    fireEvent.click(screen.getByRole('button', { name: '#E4FBCC' }))
-    fireEvent.click(screen.getByRole('button', { name: /iconPicker\.ok/ }))
+    fireEvent.click(screen.getByText('select-emoji'))
     fireEvent.click(screen.getByText('operation.save'))
 
     await waitFor(() => {
@@ -147,8 +155,8 @@ describe('ExternalDataToolModal', () => {
           api_based_extension_id: 'extension-1',
         },
         enabled: true,
-        icon: expect.any(String),
-        icon_background: '#E4FBCC',
+        icon: 'sparkles',
+        icon_background: '#fff',
         label: 'Search',
         type: 'api',
         variable: 'search_api',
@@ -160,8 +168,8 @@ describe('ExternalDataToolModal', () => {
         api_based_extension_id: 'extension-1',
       },
       enabled: true,
-      icon: expect.any(String),
-      icon_background: '#E4FBCC',
+      icon: 'sparkles',
+      icon_background: '#fff',
       label: 'Search',
       type: 'api',
       variable: 'search_api',

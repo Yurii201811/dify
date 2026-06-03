@@ -206,10 +206,7 @@ def test_export_rag_pipeline_dsl_raises_when_dataset_missing() -> None:
 
 
 def test_import_rag_pipeline_url_fetch_error(mocker) -> None:
-    mocker.patch(
-        "services.rag_pipeline.rag_pipeline_dsl_service.remote_fetcher.make_request",
-        side_effect=Exception("fetch failed"),
-    )
+    mocker.patch("services.rag_pipeline.rag_pipeline_dsl_service.ssrf_proxy.get", side_effect=Exception("fetch failed"))
     service = RagPipelineDslService(session=Mock())
     account = Mock(current_tenant_id="t1")
 
@@ -816,10 +813,7 @@ def test_import_rag_pipeline_yaml_url_handles_empty_content_after_github_rewrite
     response = Mock()
     response.raise_for_status.return_value = None
     response.content = b""
-    get_mock = mocker.patch(
-        "services.rag_pipeline.rag_pipeline_dsl_service.remote_fetcher.make_request",
-        return_value=response,
-    )
+    get_mock = mocker.patch("services.rag_pipeline.rag_pipeline_dsl_service.ssrf_proxy.get", return_value=response)
     service = RagPipelineDslService(session=Mock())
     account = Mock(current_tenant_id="t1")
 
@@ -831,7 +825,7 @@ def test_import_rag_pipeline_yaml_url_handles_empty_content_after_github_rewrite
 
     assert result.status == ImportStatus.FAILED
     assert "Empty content from url" in result.error
-    called_url = get_mock.call_args.args[1]
+    called_url = get_mock.call_args.args[0]
     assert "raw.githubusercontent.com" in called_url
 
 
@@ -886,7 +880,7 @@ def test_import_rag_pipeline_url_size_exceeds_limit(mocker) -> None:
     response = Mock()
     response.raise_for_status.return_value = None
     response.content = b"x" * (10 * 1024 * 1024 + 1)
-    mocker.patch("services.rag_pipeline.rag_pipeline_dsl_service.remote_fetcher.make_request", return_value=response)
+    mocker.patch("services.rag_pipeline.rag_pipeline_dsl_service.ssrf_proxy.get", return_value=response)
     service = RagPipelineDslService(session=Mock())
     account = Mock(current_tenant_id="t1")
 

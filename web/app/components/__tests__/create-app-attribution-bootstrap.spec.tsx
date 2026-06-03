@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { runCreateAppAttributionBootstrap } from '@/utils/create-app-tracking'
 
@@ -28,7 +28,14 @@ vi.mock('@/next/headers', () => ({
 
 const loadComponent = async () => {
   const mod = await import('../create-app-attribution-bootstrap')
-  return mod.CreateAppAttributionBootstrap
+  const rawExport = mod.default as unknown
+  const renderer: (() => Promise<ReactNode>) | undefined
+    = typeof rawExport === 'function' ? rawExport as () => Promise<ReactNode> : (rawExport as { type?: () => Promise<ReactNode> }).type
+
+  if (!renderer)
+    throw new Error('CreateAppAttributionBootstrap component is not callable in tests')
+
+  return renderer
 }
 
 const runBootstrapScript = () => {

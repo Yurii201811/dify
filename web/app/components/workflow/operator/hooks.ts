@@ -1,7 +1,6 @@
 import type { NoteNodeType } from '../note-node/types'
 import { useCallback } from 'react'
 import { useAppContext } from '@/context/app-context'
-import { useLocalStorage } from '@/hooks/use-local-storage'
 import {
   CUSTOM_NOTE_NODE,
   NOTE_SHOW_AUTHOR_STORAGE_KEY,
@@ -13,7 +12,6 @@ import { generateNewNode } from '../utils'
 export const useOperator = () => {
   const workflowStore = useWorkflowStore()
   const { userProfile } = useAppContext()
-  const [showAuthorStorage] = useLocalStorage<string>(NOTE_SHOW_AUTHOR_STORAGE_KEY, 'true', { raw: true })
 
   const handleAddNote = useCallback(() => {
     const { newNode } = generateNewNode({
@@ -25,7 +23,7 @@ export const useOperator = () => {
         text: '',
         theme: NoteTheme.blue,
         author: userProfile?.name || '',
-        showAuthor: showAuthorStorage !== 'false',
+        showAuthor: localStorage.getItem(NOTE_SHOW_AUTHOR_STORAGE_KEY) !== 'false',
         width: 240,
         height: 88,
         _isCandidate: true,
@@ -38,7 +36,7 @@ export const useOperator = () => {
     workflowStore.setState({
       candidateNode: newNode,
     })
-  }, [workflowStore, userProfile, showAuthorStorage])
+  }, [workflowStore, userProfile])
 
   return {
     handleAddNote,

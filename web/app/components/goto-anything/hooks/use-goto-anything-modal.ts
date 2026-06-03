@@ -1,39 +1,59 @@
 'use client'
 
 import type { RefObject } from 'react'
-import { useHotkey } from '@tanstack/react-hotkeys'
-import { useEffect, useRef } from 'react'
-import { useGotoAnythingOpen, useSetGotoAnythingOpen } from '../atoms'
+import { useKeyPress } from 'ahooks'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { getKeyboardKeyCodeBySystem, isEventTargetInputArea } from '@/app/components/workflow/utils/common'
 
 type UseGotoAnythingModalReturn = {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  show: boolean
+  setShow: (show: boolean | ((prev: boolean) => boolean)) => void
   inputRef: RefObject<HTMLInputElement | null>
+  handleClose: () => void
 }
 
 export const useGotoAnythingModal = (): UseGotoAnythingModalReturn => {
-  const open = useGotoAnythingOpen()
-  const setOpen = useSetGotoAnythingOpen()
+  const [show, setShow] = useState<boolean>(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useHotkey('Mod+K', (e) => {
+  // Handle keyboard shortcuts
+  const handleToggleModal = useCallback((e: KeyboardEvent) => {
+    // Allow closing when modal is open, even if focus is in the search input
+    if (!show && isEventTargetInputArea(e.target as HTMLElement))
+      return
     e.preventDefault()
-    setOpen(prev => !prev)
-  }, {
-    ignoreInputs: !open,
+    setShow(prev => !prev)
+  }, [show])
+
+  useKeyPress(`${getKeyboardKeyCodeBySystem('ctrl')}.k`, handleToggleModal, {
+    exactMatch: true,
+    useCapture: true,
   })
 
+  useKeyPress(['esc'], (e) => {
+    if (show) {
+      e.preventDefault()
+      setShow(false)
+    }
+  })
+
+  const handleClose = useCallback(() => {
+    setShow(false)
+  }, [])
+
+  // Focus input when modal opens
   useEffect(() => {
-    if (open) {
+    if (show) {
       requestAnimationFrame(() => {
         inputRef.current?.focus()
       })
     }
-  }, [open])
+  }, [show])
 
   return {
-    open,
-    onOpenChange: setOpen,
+    show,
+    setShow,
     inputRef,
+    handleClose,
   }
 }

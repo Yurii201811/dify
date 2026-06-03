@@ -1,29 +1,33 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import Loading from '@/app/components/base/loading'
-import { redirect, usePathname } from '@/next/navigation'
-import { consoleQuery } from '@/service/client'
+import { useAppContext } from '@/context/app-context'
+import { usePathname, useRouter } from '@/next/navigation'
 
 const datasetOperatorRedirectRoutes = ['/apps', '/app', '/explore', '/tools'] as const
 
 const isPathUnderRoute = (pathname: string, route: string) => pathname === route || pathname.startsWith(`${route}/`)
 
 export default function RoleRouteGuard({ children }: { children: ReactNode }) {
-  const currentWorkspaceRoleQuery = useQuery(consoleQuery.workspaces.current.post.queryOptions({
-    select: workspace => workspace.role,
-  }))
+  const { isCurrentWorkspaceDatasetOperator, isLoadingCurrentWorkspace } = useAppContext()
   const pathname = usePathname()
+  const router = useRouter()
   const shouldGuardRoute = datasetOperatorRedirectRoutes.some(route => isPathUnderRoute(pathname, route))
-  const shouldRedirect = shouldGuardRoute && !currentWorkspaceRoleQuery.isPending && currentWorkspaceRoleQuery.data === 'dataset_operator'
+  const shouldRedirect = shouldGuardRoute && !isLoadingCurrentWorkspace && isCurrentWorkspaceDatasetOperator
+
+  useEffect(() => {
+    if (shouldRedirect)
+      router.replace('/datasets')
+  }, [shouldRedirect, router])
 
   // Block rendering only for guarded routes to avoid permission flicker.
-  if (shouldGuardRoute && currentWorkspaceRoleQuery.isPending)
+  if (shouldGuardRoute && isLoadingCurrentWorkspace)
     return <Loading type="app" />
 
   if (shouldRedirect)
-    redirect('/datasets')
+    return null
 
   return <>{children}</>
 }

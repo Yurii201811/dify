@@ -1,34 +1,20 @@
 import { renderHook } from '@testing-library/react'
 import { useTrialCredits } from '../use-trial-credits'
 
-const { mockUseQuery } = vi.hoisted(() => ({
-  mockUseQuery: vi.fn(),
-}))
+const mockUseCurrentWorkspace = vi.fn()
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => mockUseQuery(),
-}))
-
-vi.mock('@/service/client', () => ({
-  consoleQuery: {
-    workspaces: {
-      current: {
-        post: {
-          queryOptions: () => ({ queryKey: ['console', 'workspaces', 'current', 'post'] }),
-        },
-      },
-    },
-  },
+vi.mock('@/service/use-common', () => ({
+  useCurrentWorkspace: () => mockUseCurrentWorkspace(),
 }))
 
 describe('useTrialCredits', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseQuery.mockReturnValue({
+    mockUseCurrentWorkspace.mockReturnValue({
       data: {
         trial_credits: 100,
         trial_credits_used: 40,
-        next_credit_reset_date: 1775001600,
+        next_credit_reset_date: '2026-04-01',
       },
       isPending: false,
     })
@@ -43,16 +29,16 @@ describe('useTrialCredits', () => {
         totalCredits: 100,
         isExhausted: false,
         isLoading: false,
-        nextCreditResetDate: 1775001600,
+        nextCreditResetDate: '2026-04-01',
       })
     })
 
     it('should keep the hook out of loading state during a background refetch', () => {
-      mockUseQuery.mockReturnValue({
+      mockUseCurrentWorkspace.mockReturnValue({
         data: {
           trial_credits: 80,
           trial_credits_used: 20,
-          next_credit_reset_date: 1777593600,
+          next_credit_reset_date: '2026-05-01',
         },
         isPending: true,
       })
@@ -67,7 +53,7 @@ describe('useTrialCredits', () => {
 
   describe('when workspace data is missing or exhausted', () => {
     it('should report loading while the first workspace request is pending', () => {
-      mockUseQuery.mockReturnValue({
+      mockUseCurrentWorkspace.mockReturnValue({
         data: undefined,
         isPending: true,
       })
@@ -84,7 +70,7 @@ describe('useTrialCredits', () => {
     })
 
     it('should clamp negative remaining credits to zero', () => {
-      mockUseQuery.mockReturnValue({
+      mockUseCurrentWorkspace.mockReturnValue({
         data: {
           trial_credits: 10,
           trial_credits_used: 99,

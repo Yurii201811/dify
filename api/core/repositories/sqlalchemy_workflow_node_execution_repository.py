@@ -7,7 +7,7 @@ import json
 import logging
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, override
+from typing import Any
 
 import psycopg2.errors
 from sqlalchemy import UnaryExpression, asc, desc, select
@@ -313,7 +313,6 @@ class SQLAlchemyWorkflowNodeExecutionRepository(WorkflowNodeExecutionRepository)
             offload=offload,
         )
 
-    @override
     def save(self, execution: WorkflowNodeExecution) -> None:
         """
         Save or update a NodeExecution domain entity to the database.
@@ -400,7 +399,6 @@ class SQLAlchemyWorkflowNodeExecutionRepository(WorkflowNodeExecutionRepository)
             if db_model.node_execution_id:
                 self._node_execution_cache[db_model.node_execution_id] = db_model
 
-    @override
     def save_execution_data(self, execution: WorkflowNodeExecution):
         domain_model = execution
         with self._session_factory(expire_on_commit=False) as session:
@@ -520,7 +518,6 @@ class SQLAlchemyWorkflowNodeExecutionRepository(WorkflowNodeExecutionRepository)
 
             return db_models
 
-    @override
     def get_by_workflow_execution(
         self,
         workflow_execution_id: str,

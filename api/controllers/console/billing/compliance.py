@@ -3,18 +3,11 @@ from flask_restx import Resource
 from pydantic import BaseModel, Field
 
 from libs.helper import extract_remote_ip
-from libs.login import login_required
-from models import Account
+from libs.login import current_account_with_tenant, login_required
 from services.billing_service import BillingService
 
 from .. import console_ns
-from ..wraps import (
-    account_initialization_required,
-    only_edition_cloud,
-    setup_required,
-    with_current_tenant_id,
-    with_current_user,
-)
+from ..wraps import account_initialization_required, only_edition_cloud, setup_required
 
 
 class ComplianceDownloadQuery(BaseModel):
@@ -36,9 +29,8 @@ class ComplianceApi(Resource):
     @login_required
     @account_initialization_required
     @only_edition_cloud
-    @with_current_user
-    @with_current_tenant_id
-    def get(self, current_tenant_id: str, current_user: Account):
+    def get(self):
+        current_user, current_tenant_id = current_account_with_tenant()
         args = ComplianceDownloadQuery.model_validate(request.args.to_dict(flat=True))
 
         ip_address = extract_remote_ip(request)

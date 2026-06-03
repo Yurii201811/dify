@@ -1,9 +1,9 @@
 'use client'
 import type { FC } from 'react'
 import { cn } from '@langgenius/dify-ui/cn'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { useMemo } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
+import Indicator from '@/app/components/header/indicator'
 import StatusContainer from '@/app/components/workflow/run/status-container'
 import { useDocLink } from '@/context/i18n'
 import { useWorkflowPausedDetails } from '@/service/use-log'
@@ -112,43 +112,43 @@ const StatusPanel: FC<ResultProps> = ({
           >
             {status === 'running' && (
               <>
-                <StatusDot status="normal" />
+                <Indicator color="blue" />
                 <span>{isListening ? 'Listening' : 'Running'}</span>
               </>
             )}
             {status === 'succeeded' && (
               <>
-                <StatusDot status="success" />
+                <Indicator color="green" />
                 <span>SUCCESS</span>
               </>
             )}
             {status === 'partial-succeeded' && (
               <>
-                <StatusDot status="success" />
+                <Indicator color="green" />
                 <span>PARTIAL SUCCESS</span>
               </>
             )}
             {status === 'exception' && (
               <>
-                <StatusDot status="warning" />
+                <Indicator color="yellow" />
                 <span>EXCEPTION</span>
               </>
             )}
             {status === 'failed' && (
               <>
-                <StatusDot status="error" />
+                <Indicator color="red" />
                 <span>FAIL</span>
               </>
             )}
             {status === 'stopped' && (
               <>
-                <StatusDot status="warning" />
+                <Indicator color="yellow" />
                 <span>STOP</span>
               </>
             )}
             {status === 'paused' && (
               <>
-                <StatusDot status="warning" />
+                <Indicator color="yellow" />
                 <span>PENDING</span>
               </>
             )}

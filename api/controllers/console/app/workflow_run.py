@@ -1,6 +1,5 @@
 from datetime import UTC, datetime, timedelta
 from typing import Literal, cast
-from uuid import UUID
 
 from flask import request
 from flask_restx import Resource
@@ -189,7 +188,7 @@ class WorkflowRunExportApi(Resource):
     @login_required
     @account_initialization_required
     @get_app_model()
-    def get(self, app_model: App, run_id: UUID):
+    def get(self, app_model: App, run_id: str):
         tenant_id = str(app_model.tenant_id)
         app_id = str(app_model.id)
         run_id_str = str(run_id)
@@ -368,14 +367,14 @@ class WorkflowRunDetailApi(Resource):
     @login_required
     @account_initialization_required
     @get_app_model(mode=[AppMode.ADVANCED_CHAT, AppMode.WORKFLOW])
-    def get(self, app_model: App, run_id: UUID):
+    def get(self, app_model: App, run_id):
         """
         Get workflow run detail
         """
-        run_id_str = str(run_id)
+        run_id = str(run_id)
 
         workflow_run_service = WorkflowRunService()
-        workflow_run = workflow_run_service.get_workflow_run(app_model=app_model, run_id=run_id_str)
+        workflow_run = workflow_run_service.get_workflow_run(app_model=app_model, run_id=run_id)
         if workflow_run is None:
             raise NotFoundError("Workflow run not found")
 
@@ -397,17 +396,17 @@ class WorkflowRunNodeExecutionListApi(Resource):
     @login_required
     @account_initialization_required
     @get_app_model(mode=[AppMode.ADVANCED_CHAT, AppMode.WORKFLOW])
-    def get(self, app_model: App, run_id: UUID):
+    def get(self, app_model: App, run_id):
         """
         Get workflow run node execution list
         """
-        run_id_str = str(run_id)
+        run_id = str(run_id)
 
         workflow_run_service = WorkflowRunService()
         user = cast("Account | EndUser", current_user)
         node_executions = workflow_run_service.get_workflow_run_node_executions(
             app_model=app_model,
-            run_id=run_id_str,
+            run_id=run_id,
             user=user,
         )
 

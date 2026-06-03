@@ -4,7 +4,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@langgenius/dify-ui/popover'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import {
   RiAddLine,
   RiArrowDownSLine,
@@ -16,6 +15,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import Badge from '@/app/components/base/badge'
+import Indicator from '@/app/components/header/indicator'
 import CredentialItem from './authorized/credential-item'
 
 type CredentialSelectorProps = {
@@ -60,7 +60,7 @@ const CredentialSelector = ({
           selectedCredential && (
             <div className="flex items-center">
               {
-                !selectedCredential.addNewCredential && <StatusDot className="mr-2 ml-1 shrink-0" />
+                !selectedCredential.addNewCredential && <Indicator className="mr-2 ml-1 shrink-0" />
               }
               <div className="truncate system-sm-regular text-components-input-text-filled" title={selectedCredential.credential_name}>{selectedCredential.credential_name}</div>
               {

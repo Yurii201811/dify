@@ -15,16 +15,11 @@ from .agent import (
     AgentConfigSnapshot,
     AgentIconType,
     AgentKind,
-    AgentRuntimeSession,
-    AgentRuntimeSessionOwnerType,
-    AgentRuntimeSessionStatus,
     AgentScope,
     AgentSource,
     AgentStatus,
     WorkflowAgentBindingType,
     WorkflowAgentNodeBinding,
-    WorkflowAgentRuntimeSession,
-    WorkflowAgentRuntimeSessionStatus,
 )
 from .api_based_extension import APIBasedExtension, APIBasedExtensionPoint
 from .comment import (
@@ -32,8 +27,6 @@ from .comment import (
     WorkflowCommentMention,
     WorkflowCommentReply,
 )
-from .credential_permission import CredentialPermission
-from .credential_permission import CredentialType as CredentialPermissionType
 from .dataset import (
     AppDatasetJoin,
     Dataset,
@@ -55,7 +48,6 @@ from .enums import (
     AppTriggerStatus,
     AppTriggerType,
     CreatorUserRole,
-    PermissionEnum,
     WorkflowRunTriggeredFrom,
     WorkflowTriggerStatus,
 )
@@ -94,7 +86,7 @@ from .model import (
     TrialApp,
     UploadFile,
 )
-from .oauth import DatasourceOauthParamConfig, DatasourceProvider, OAuthAccessToken
+from .oauth import DatasourceOauthParamConfig, DatasourceProvider
 from .provider import (
     LoadBalancingModelConfig,
     Provider,
@@ -106,6 +98,7 @@ from .provider import (
     TenantDefaultModel,
     TenantPreferredModelProvider,
 )
+from .snippet import CustomizedSnippet, SnippetType
 from .source import DataSourceApiKeyAuthBinding, DataSourceOauthBinding
 from .task import CeleryTask, CeleryTaskSet
 from .tools import (
@@ -131,12 +124,14 @@ from .workflow import (
     WorkflowAppLog,
     WorkflowAppLogCreatedFrom,
     WorkflowArchiveLog,
+    WorkflowKind,
     WorkflowNodeExecutionModel,
     WorkflowNodeExecutionOffload,
     WorkflowNodeExecutionTriggeredFrom,
     WorkflowPause,
     WorkflowRun,
     WorkflowType,
+    resolve_workflow_kind,
 )
 
 __all__ = [
@@ -152,9 +147,6 @@ __all__ = [
     "AgentConfigSnapshot",
     "AgentIconType",
     "AgentKind",
-    "AgentRuntimeSession",
-    "AgentRuntimeSessionOwnerType",
-    "AgentRuntimeSessionStatus",
     "AgentScope",
     "AgentSource",
     "AgentStatus",
@@ -177,8 +169,7 @@ __all__ = [
     "Conversation",
     "ConversationVariable",
     "CreatorUserRole",
-    "CredentialPermission",
-    "CredentialPermissionType",
+    "CustomizedSnippet",
     "DataSourceApiKeyAuthBinding",
     "DataSourceOauthBinding",
     "Dataset",
@@ -212,9 +203,7 @@ __all__ = [
     "MessageChain",
     "MessageFeedback",
     "MessageFile",
-    "OAuthAccessToken",
     "OperationLog",
-    "PermissionEnum",
     "PinnedConversation",
     "Provider",
     "ProviderModel",
@@ -225,6 +214,7 @@ __all__ = [
     "RecommendedApp",
     "SavedMessage",
     "Site",
+    "SnippetType",
     "Tag",
     "TagBinding",
     "Tenant",
@@ -249,11 +239,10 @@ __all__ = [
     "Workflow",
     "WorkflowAgentBindingType",
     "WorkflowAgentNodeBinding",
-    "WorkflowAgentRuntimeSession",
-    "WorkflowAgentRuntimeSessionStatus",
     "WorkflowAppLog",
     "WorkflowAppLogCreatedFrom",
     "WorkflowArchiveLog",
+    "WorkflowKind",
     "WorkflowComment",
     "WorkflowCommentMention",
     "WorkflowCommentReply",
@@ -267,4 +256,5 @@ __all__ = [
     "WorkflowToolProvider",
     "WorkflowTriggerStatus",
     "WorkflowType",
+    "resolve_workflow_kind",
 ]

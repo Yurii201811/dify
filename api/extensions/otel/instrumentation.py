@@ -1,7 +1,7 @@
 import contextlib
 import logging
 from collections.abc import Callable
-from typing import Protocol, cast, override
+from typing import Protocol, cast
 
 import flask
 from opentelemetry.instrumentation.celery import CeleryInstrumentor
@@ -63,8 +63,7 @@ class ExceptionLoggingHandler(logging.Handler):
     to maintain trace context consistency throughout the request lifecycle.
     """
 
-    @override
-    def emit(self, record: logging.LogRecord) -> None:
+    def emit(self, record: logging.LogRecord):
         with contextlib.suppress(Exception):
             if not record.exc_info:
                 return

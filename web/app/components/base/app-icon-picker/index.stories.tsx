@@ -48,20 +48,20 @@ const AppIconPickerDemo = () => {
         </pre>
       </div>
 
-      <AppIconPicker
-        open={open}
-        onOpenChange={setOpen}
-        onSelect={setSelection}
-      />
+      {open && (
+        <AppIconPicker
+          onSelect={(result) => {
+            setSelection(result)
+            setOpen(false)
+          }}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </div>
   )
 }
 
 export const Playground: Story = {
-  args: {
-    open: false,
-    onOpenChange: () => {},
-  },
   render: () => <AppIconPickerDemo />,
   parameters: {
     docs: {
@@ -74,11 +74,15 @@ const [selection, setSelection] = useState<AppIconSelection | null>(null)
 return (
   <>
     <button onClick={() => setOpen(true)}>Choose icon…</button>
-    <AppIconPicker
-      open={open}
-      onOpenChange={setOpen}
-      onSelect={setSelection}
-    />
+    {open && (
+      <AppIconPicker
+        onSelect={(result) => {
+          setSelection(result)
+          setOpen(false)
+        }}
+        onClose={() => setOpen(false)}
+      />
+    )}
   </>
 )
         `.trim(),

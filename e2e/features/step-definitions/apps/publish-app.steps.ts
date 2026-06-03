@@ -7,13 +7,9 @@ When('I open the publish panel', async function (this: DifyWorld) {
 })
 
 When('I publish the app', async function (this: DifyWorld) {
-  await this.getPage()
-    .getByRole('button', { name: /Publish Update/ })
-    .click()
+  await this.getPage().getByRole('button', { name: /Publish Update/ }).click()
 })
 
 Then('the app should be marked as published', async function (this: DifyWorld) {
-  await expect(this.getPage().getByRole('button', { name: 'Published' })).toBeVisible({
-    timeout: 30_000,
-  })
+  await expect(this.getPage().getByRole('button', { name: 'Published' })).toBeVisible({ timeout: 30_000 })
 })

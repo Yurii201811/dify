@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from flask import request
 from pydantic import BaseModel, Field, TypeAdapter
@@ -8,7 +7,6 @@ from werkzeug.exceptions import NotFound
 
 from controllers.common.controller_schemas import ConversationRenamePayload
 from controllers.common.schema import register_response_schema_models, register_schema_models
-from controllers.console.app.error import AppUnavailableError
 from controllers.console.explore.error import NotChatAppError
 from controllers.console.explore.wraps import InstalledAppResource
 from core.app.entities.app_invoke_entities import InvokeFrom
@@ -21,7 +19,7 @@ from fields.conversation_fields import (
 from libs.helper import UUIDStrOrEmpty
 from libs.login import current_user
 from models import Account
-from models.model import AppMode, InstalledApp
+from models.model import AppMode
 from services.conversation_service import ConversationService
 from services.errors.conversation import ConversationNotExistsError, LastConversationNotExistsError
 from services.web_conversation_service import WebConversationService
@@ -45,10 +43,8 @@ register_response_schema_models(console_ns, ResultResponse)
 )
 class ConversationListApi(InstalledAppResource):
     @console_ns.expect(console_ns.models[ConversationListQuery.__name__])
-    def get(self, installed_app: InstalledApp):
+    def get(self, installed_app):
         app_model = installed_app.app
-        if app_model is None:
-            raise AppUnavailableError()
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()
@@ -95,10 +91,8 @@ class ConversationListApi(InstalledAppResource):
 )
 class ConversationApi(InstalledAppResource):
     @console_ns.response(204, "Conversation deleted successfully")
-    def delete(self, installed_app: InstalledApp, c_id: UUID):
+    def delete(self, installed_app, c_id):
         app_model = installed_app.app
-        if app_model is None:
-            raise AppUnavailableError()
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()
@@ -111,7 +105,7 @@ class ConversationApi(InstalledAppResource):
         except ConversationNotExistsError:
             raise NotFound("Conversation Not Exists.")
 
-        return "", 204
+        return ResultResponse(result="success").model_dump(mode="json"), 204
 
 
 @console_ns.route(
@@ -120,10 +114,8 @@ class ConversationApi(InstalledAppResource):
 )
 class ConversationRenameApi(InstalledAppResource):
     @console_ns.expect(console_ns.models[ConversationRenamePayload.__name__])
-    def post(self, installed_app: InstalledApp, c_id: UUID):
+    def post(self, installed_app, c_id):
         app_model = installed_app.app
-        if app_model is None:
-            raise AppUnavailableError()
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()
@@ -153,10 +145,8 @@ class ConversationRenameApi(InstalledAppResource):
 )
 class ConversationPinApi(InstalledAppResource):
     @console_ns.response(200, "Success", console_ns.models[ResultResponse.__name__])
-    def patch(self, installed_app: InstalledApp, c_id: UUID):
+    def patch(self, installed_app, c_id):
         app_model = installed_app.app
-        if app_model is None:
-            raise AppUnavailableError()
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()
@@ -179,10 +169,8 @@ class ConversationPinApi(InstalledAppResource):
 )
 class ConversationUnPinApi(InstalledAppResource):
     @console_ns.response(200, "Success", console_ns.models[ResultResponse.__name__])
-    def patch(self, installed_app: InstalledApp, c_id: UUID):
+    def patch(self, installed_app, c_id):
         app_model = installed_app.app
-        if app_model is None:
-            raise AppUnavailableError()
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
             raise NotChatAppError()

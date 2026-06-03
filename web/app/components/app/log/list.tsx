@@ -17,11 +17,9 @@ import {
   DrawerPortal,
   DrawerViewport,
 } from '@langgenius/dify-ui/drawer'
-import { StatusDot } from '@langgenius/dify-ui/status-dot'
 import { toast } from '@langgenius/dify-ui/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import { RiCloseLine, RiEditFill } from '@remixicon/react'
-import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
@@ -41,7 +39,7 @@ import CopyIcon from '@/app/components/base/copy-icon'
 import Loading from '@/app/components/base/loading'
 import MessageLogModal from '@/app/components/base/message-log-modal'
 import { WorkflowContextProvider } from '@/app/components/workflow/context'
-import { userProfileQueryOptions } from '@/features/account-profile/client'
+import { useAppContext } from '@/context/app-context'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import useTimestamp from '@/hooks/use-timestamp'
 import { fetchChatMessages, updateLogMessageAnnotations, updateLogMessageFeedbacks } from '@/service/log'
@@ -49,6 +47,7 @@ import { AppSourceType } from '@/service/share'
 import { useChatConversationDetail, useCompletionConversationDetail } from '@/service/use-log'
 import { AppModeEnum } from '@/types/app'
 import PromptLogModal from '../../base/prompt-log-modal'
+import Indicator from '../../header/indicator'
 import {
   applyAnnotationAdded,
   applyAnnotationEdited,
@@ -115,7 +114,7 @@ const statusTdRender = (statusCount: StatusCount) => {
   if (statusCount.paused > 0) {
     return (
       <div className="inline-flex items-center gap-1 system-xs-semibold-uppercase">
-        <StatusDot status="warning" />
+        <Indicator color="yellow" />
         <span className="text-util-colors-warning-warning-600">Pending</span>
       </div>
     )
@@ -123,7 +122,7 @@ const statusTdRender = (statusCount: StatusCount) => {
   else if (statusCount.partial_success + statusCount.failed === 0) {
     return (
       <div className="inline-flex items-center gap-1 system-xs-semibold-uppercase">
-        <StatusDot status="success" />
+        <Indicator color="green" />
         <span className="text-util-colors-green-green-600">Success</span>
       </div>
     )
@@ -131,7 +130,7 @@ const statusTdRender = (statusCount: StatusCount) => {
   else if (statusCount.failed === 0) {
     return (
       <div className="inline-flex items-center gap-1 system-xs-semibold-uppercase">
-        <StatusDot status="success" />
+        <Indicator color="green" />
         <span className="text-util-colors-green-green-600">Partial Success</span>
       </div>
     )
@@ -139,7 +138,7 @@ const statusTdRender = (statusCount: StatusCount) => {
   else {
     return (
       <div className="inline-flex items-center gap-1 system-xs-semibold-uppercase">
-        <StatusDot status="error" />
+        <Indicator color="red" />
         <span className="text-util-colors-red-red-600">
           {statusCount.failed}
           {' '}
@@ -159,10 +158,7 @@ type IDetailPanel = {
 function DetailPanel({ detail, onFeedback }: IDetailPanel) {
   const MIN_ITEMS_FOR_SCROLL_LOADING = 8
   const SCROLL_DEBOUNCE_MS = 200
-  const { data: timezone } = useQuery({
-    ...userProfileQueryOptions(),
-    select: data => data.profile.timezone ?? undefined,
-  })
+  const { userProfile: { timezone } } = useAppContext()
   const { formatTime } = useTimestamp()
   const { onClose, appDetail } = useContext(DrawerContext)
   const { currentLogItem, setCurrentLogItem, showMessageLogModal, setShowMessageLogModal, showPromptLogModal, setShowPromptLogModal, currentLogModalActiveTab } = useAppStore(useShallow((state: AppStoreState) => ({

@@ -17,7 +17,7 @@ import { Mcp } from '@/app/components/base/icons/src/vender/other'
 import Input from '@/app/components/base/input'
 import TabSlider from '@/app/components/base/tab-slider'
 import { MCPAuthMethod } from '@/app/components/tools/types'
-import { systemFeaturesQueryOptions } from '@/service/system-features'
+import { systemFeaturesQueryOptions } from '@/features/system-features/client'
 import { shouldUseMcpIconForAppIcon } from '@/utils/mcp'
 import { isValidServerID, isValidUrl, useMCPModalForm } from './hooks/use-mcp-modal-form'
 import AuthenticationSection from './sections/authentication-section'
@@ -218,29 +218,27 @@ const MCPModalContent: FC<MCPModalContentProps> = ({
           )}
         </div>
 
-        {/* Forward user identity — gated on enterprise SSO being configured */}
-        <div>
-          <div className="mb-1 flex h-6 items-center">
-            <Switch
-              className="mr-2"
-              checked={state.forwardUserIdentity && isForwardIdentitySupported}
-              onCheckedChange={actions.setForwardUserIdentity}
-              disabled={!isForwardIdentitySupported}
-              aria-labelledby="mcp-forward-user-identity-label"
-            />
-            <span
-              id="mcp-forward-user-identity-label"
-              className="system-sm-medium text-text-secondary"
-            >
-              {t('mcp.modal.forwardUserIdentity', { ns: 'tools' })}
-            </span>
+        {isForwardIdentitySupported && (
+          <div>
+            <div className="mb-1 flex h-6 items-center">
+              <Switch
+                className="mr-2"
+                checked={state.forwardUserIdentity}
+                onCheckedChange={actions.setForwardUserIdentity}
+                aria-labelledby="mcp-forward-user-identity-label"
+              />
+              <span
+                id="mcp-forward-user-identity-label"
+                className="system-sm-medium text-text-secondary"
+              >
+                {t('mcp.modal.forwardUserIdentity', { ns: 'tools' })}
+              </span>
+            </div>
+            <div className="body-xs-regular text-text-tertiary">
+              {t('mcp.modal.forwardUserIdentityTip', { ns: 'tools' })}
+            </div>
           </div>
-          <div className="body-xs-regular text-text-tertiary">
-            {isForwardIdentitySupported
-              ? t('mcp.modal.forwardUserIdentityTip', { ns: 'tools' })
-              : t('mcp.modal.forwardUserIdentityUnavailable', { ns: 'tools' })}
-          </div>
-        </div>
+        )}
 
         {/* Auth Method Tabs */}
         <TabSlider
